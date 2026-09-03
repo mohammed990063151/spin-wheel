@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import { Cairo, Tajawal } from "next/font/google";
+import { LocaleProvider } from "@/components/LocaleProvider";
+import { localeDir, parseLocale, t } from "@/lib/i18n";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -14,25 +17,32 @@ const tajawal = Tajawal({
   weight: ["400", "500", "700", "800"],
 });
 
-export const metadata: Metadata = {
-  title: "عجلة الحظ | Place × Enala",
-  description: "مسابقة عجلة الحظ — فنادق إنالة ومصنع Place",
-};
-
 export const viewport: Viewport = {
   themeColor: "#071612",
   width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = parseLocale((await cookies()).get("spin-locale")?.value);
+  return {
+    title: t(locale, "meta.title"),
+    description: t(locale, "meta.description"),
+  };
+}
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = parseLocale((await cookies()).get("spin-locale")?.value);
+
   return (
     <html
-      lang="ar"
-      dir="rtl"
+      lang={locale}
+      dir={localeDir(locale)}
       className={`${cairo.variable} ${tajawal.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+      </body>
     </html>
   );
 }

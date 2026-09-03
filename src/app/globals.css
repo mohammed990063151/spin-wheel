@@ -249,8 +249,12 @@ body {
   color: color-mix(in srgb, var(--ink-muted) 85%, transparent);
 }
 
+html[dir="ltr"] .cta-btn svg {
+  transform: scaleX(-1);
+}
+
 .auth-card {
-  text-align: right;
+  text-align: start;
 }
 
 .auth-card .modal-title,
@@ -348,7 +352,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  text-align: right;
+  text-align: start;
 }
 
 .form-field label {
@@ -1261,7 +1265,41 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
   gap: 0.45rem;
+  margin-inline-start: auto;
+}
+
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgba(7, 22, 18, 0.55);
+}
+
+.lang-switch button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  padding: 0.38rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.lang-switch button.is-on {
+  color: #04110d;
+  background: linear-gradient(135deg, #f0d78c, #c4a35a);
+}
+
+.site-brand .lang-switch {
+  margin-inline-start: auto;
 }
 
 .site-topbar-btn {
@@ -1461,6 +1499,69 @@ body {
 .studio-saved {
   color: #7ee0c4;
   margin: 0 0 0.5rem;
+}
+
+.sofa-qr-card {
+  width: min(420px, 100%);
+  text-align: center;
+}
+
+.sofa-qr-code {
+  display: block;
+  width: min(280px, 72%);
+  aspect-ratio: 1;
+  object-fit: contain;
+  margin: 0.5rem auto 0.7rem;
+  padding: 0.55rem;
+  border-radius: 18px;
+  background: #f8f1de;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+}
+
+.sofa-qr-code.is-empty {
+  min-height: 220px;
+}
+
+.sofa-qr-hint {
+  margin: 0 0 0.9rem;
+  color: var(--gold-bright);
+  font-weight: 700;
+}
+
+.sofa-qr-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.share-page {
+  height: auto;
+  min-height: 100dvh;
+  overflow: auto;
+}
+
+.share-shell {
+  position: relative;
+  z-index: 1;
+  width: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.share-stage {
+  height: min(62vh, 520px);
+}
+
+.share-copy {
+  border-radius: 22px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  padding: 1rem 1.1rem 1.2rem;
+}
+
+.share-copy .cta-btn {
+  width: 100%;
 }
 
 .guess-intro {

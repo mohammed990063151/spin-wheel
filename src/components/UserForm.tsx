@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/LocaleProvider";
+import { toAsciiDigits } from "@/lib/phone";
 
 export interface UserData {
   name: string;
@@ -15,9 +17,10 @@ interface UserFormProps {
 
 export default function UserForm({
   onSubmit,
-  submitLabel = "أرسل الكود",
+  submitLabel,
   disabled = false,
 }: UserFormProps) {
+  const { t } = useLocale();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({});
@@ -26,11 +29,11 @@ export default function UserForm({
   const validate = () => {
     const next: { name?: string; phone?: string } = {};
     if (!name.trim() || name.trim().length < 2) {
-      next.name = "أدخل الاسم";
+      next.name = t("auth.nameRequired");
     }
-    const digits = phone.replace(/\D/g, "");
+    const digits = toAsciiDigits(phone).replace(/\D/g, "");
     if (digits.length < 9 || digits.length > 15) {
-      next.phone = "أدخل رقم جوال صحيح";
+      next.phone = t("auth.phoneInvalid");
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -49,13 +52,13 @@ export default function UserForm({
   return (
     <div className={`form-panel ${shaking ? "shake" : ""}`}>
       <div className="form-field">
-        <label htmlFor="name">الاسم</label>
+        <label htmlFor="name">{t("auth.name")}</label>
         <input
           id="name"
           data-testid="auth-name"
           type="text"
           autoComplete="name"
-          placeholder="مثال: أحمد محمد"
+          placeholder={t("auth.namePlaceholder")}
           value={name}
           disabled={disabled}
           onChange={(e) => {
@@ -68,7 +71,7 @@ export default function UserForm({
       </div>
 
       <div className="form-field">
-        <label htmlFor="phone">رقم الجوال</label>
+        <label htmlFor="phone">{t("auth.phone")}</label>
         <input
           id="phone"
           data-testid="auth-phone"
@@ -91,7 +94,7 @@ export default function UserForm({
           }}
           aria-invalid={!!errors.phone}
         />
-        <p className="field-hint">نرسل كود للجوال</p>
+        <p className="field-hint">{t("auth.phoneHint")}</p>
         {errors.phone && <span className="field-error">{errors.phone}</span>}
       </div>
 
@@ -102,7 +105,7 @@ export default function UserForm({
         disabled={disabled}
         onClick={submit}
       >
-        <span>{submitLabel}</span>
+        <span>{submitLabel ?? t("auth.send")}</span>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
           <path
             d="M15 18l-6-6 6-6"

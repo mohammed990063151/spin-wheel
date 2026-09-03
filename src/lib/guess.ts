@@ -9,7 +9,9 @@ export interface GuessRound {
 export interface GuessPrize {
   id: string;
   label: string;
+  labelEn: string;
   description: string;
+  descriptionEn: string;
   empty?: boolean;
 }
 
@@ -32,27 +34,35 @@ export function prizeFromScore(score: number, max = 3): GuessPrize {
     return {
       id: "design15",
       label: "خصم 15% على كنبتك",
+      labelEn: "15% off your sofa",
       description: "خصم 15% على تنفيذ الكنبة التي صممتها أو أي طقم مشابه من Place",
+      descriptionEn: "15% off making the sofa you designed, or a similar Place set",
     };
   }
   if (score === 2) {
     return {
       id: "velvet_pillow",
       label: "وسادة مخملية",
+      labelEn: "Velvet pillow",
       description: "وسادة مخملية من مصنع Place تُسلّم من جناح المعرض",
+      descriptionEn: "A Place velvet pillow, collected at the exhibition stand",
     };
   }
   if (score === 1) {
     return {
       id: "consult",
       label: "استشارة تصميم",
+      labelEn: "Design consult",
       description: "جلسة استشارة تصميم مجانية 15 دقيقة مع فريق Place",
+      descriptionEn: "A free 15-minute design consult with the Place team",
     };
   }
   return {
     id: "catalog",
     label: "كتالوج Place",
+    labelEn: "Place catalogue",
     description: "شكراً لذوقك — نرسل لك كتالوج المصنع ونتواصل عند العروض",
+    descriptionEn: "Thank you — we will send the factory catalogue and follow up on offers",
     empty: true,
   };
 }

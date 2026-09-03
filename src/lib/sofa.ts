@@ -1,3 +1,6 @@
+import type { Locale } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+
 export type SeatCount = 2 | 3 | 4 | 5;
 export type ArmStyle = "square" | "rounded" | "flared" | "none";
 export type LegStyle = "wood" | "hairpin" | "gold" | "hidden";
@@ -7,6 +10,7 @@ export type PillowStyle = "none" | "pair" | "trio" | "mix";
 export interface FabricColor {
   id: string;
   label: string;
+  labelEn: string;
   hex: string;
   accent: string;
 }
@@ -20,51 +24,64 @@ export interface SofaConfig {
   pillows: PillowStyle;
 }
 
-export const SEAT_OPTIONS: { id: SeatCount; label: string }[] = [
-  { id: 2, label: "مقعدان" },
-  { id: 3, label: "ثلاثة" },
-  { id: 4, label: "أربعة" },
-  { id: 5, label: "خمسة" },
+export const SEAT_OPTIONS: { id: SeatCount; label: string; labelEn: string }[] = [
+  { id: 2, label: "مقعدان", labelEn: "2 seats" },
+  { id: 3, label: "ثلاثة", labelEn: "3 seats" },
+  { id: 4, label: "أربعة", labelEn: "4 seats" },
+  { id: 5, label: "خمسة", labelEn: "5 seats" },
 ];
 
-export const ARM_OPTIONS: { id: ArmStyle; label: string }[] = [
-  { id: "square", label: "مربع" },
-  { id: "rounded", label: "دائري" },
-  { id: "flared", label: "مفتوح" },
-  { id: "none", label: "بدون ذراع" },
+export const ARM_OPTIONS: { id: ArmStyle; label: string; labelEn: string }[] = [
+  { id: "square", label: "مربع", labelEn: "Square" },
+  { id: "rounded", label: "دائري", labelEn: "Rounded" },
+  { id: "flared", label: "مفتوح", labelEn: "Flared" },
+  { id: "none", label: "بدون ذراع", labelEn: "Armless" },
 ];
 
-export const LEG_OPTIONS: { id: LegStyle; label: string }[] = [
-  { id: "wood", label: "خشب" },
-  { id: "hairpin", label: "معدن رفيع" },
-  { id: "gold", label: "ذهبي" },
-  { id: "hidden", label: "مخفي" },
+export const LEG_OPTIONS: { id: LegStyle; label: string; labelEn: string }[] = [
+  { id: "wood", label: "خشب", labelEn: "Wood" },
+  { id: "hairpin", label: "معدن رفيع", labelEn: "Hairpin" },
+  { id: "gold", label: "ذهبي", labelEn: "Gold" },
+  { id: "hidden", label: "مخفي", labelEn: "Hidden" },
 ];
 
-export const FABRIC_OPTIONS: { id: FabricType; label: string; hint: string }[] = [
-  { id: "velvet", label: "مخمل", hint: "فاخر ولامع بهدوء" },
-  { id: "linen", label: "كتان", hint: "خفيف وطبيعي" },
-  { id: "leather", label: "جلد", hint: "أنيق وسهل التنظيف" },
-  { id: "boucle", label: "بوكليه", hint: "ملمس غني ودافئ" },
+export const FABRIC_OPTIONS: { id: FabricType; label: string; labelEn: string; hint: string; hintEn: string }[] = [
+  { id: "velvet", label: "مخمل", labelEn: "Velvet", hint: "فاخر ولامع بهدوء", hintEn: "Quiet luxury sheen" },
+  { id: "linen", label: "كتان", labelEn: "Linen", hint: "خفيف وطبيعي", hintEn: "Light and natural" },
+  { id: "leather", label: "جلد", labelEn: "Leather", hint: "أنيق وسهل التنظيف", hintEn: "Smart and easy to clean" },
+  { id: "boucle", label: "بوكليه", labelEn: "Bouclé", hint: "ملمس غني ودافئ", hintEn: "Rich, warm texture" },
 ];
 
-export const PILLOW_OPTIONS: { id: PillowStyle; label: string }[] = [
-  { id: "none", label: "بدون" },
-  { id: "pair", label: "وسادتان" },
-  { id: "trio", label: "ثلاث وسائد" },
-  { id: "mix", label: "مزيج فخم" },
+export const PILLOW_OPTIONS: { id: PillowStyle; label: string; labelEn: string }[] = [
+  { id: "none", label: "بدون", labelEn: "None" },
+  { id: "pair", label: "وسادتان", labelEn: "Two pillows" },
+  { id: "trio", label: "ثلاث وسائد", labelEn: "Three pillows" },
+  { id: "mix", label: "مزيج فخم", labelEn: "Luxe mix" },
 ];
 
 export const FABRIC_COLORS: FabricColor[] = [
-  { id: "olive", label: "زيتوني", hex: "#6F7B45", accent: "#C9C2B0" },
-  { id: "cream", label: "كريمي", hex: "#E6D9C4", accent: "#8A6E2F" },
-  { id: "navy", label: "كحلي", hex: "#1E3354", accent: "#D4C4A0" },
-  { id: "charcoal", label: "فحمي", hex: "#3B3B3B", accent: "#C4A35A" },
-  { id: "terracotta", label: "طيني", hex: "#B85C38", accent: "#E8DCC8" },
-  { id: "sage", label: "أخضر هادئ", hex: "#8FA382", accent: "#F3EAD8" },
-  { id: "sand", label: "رملي", hex: "#C4B08A", accent: "#3A3228" },
-  { id: "burgundy", label: "عنابي", hex: "#6E2C3A", accent: "#E6D9C4" },
+  { id: "olive", label: "زيتوني", labelEn: "Olive", hex: "#6F7B45", accent: "#C9C2B0" },
+  { id: "cream", label: "كريمي", labelEn: "Cream", hex: "#E6D9C4", accent: "#8A6E2F" },
+  { id: "navy", label: "كحلي", labelEn: "Navy", hex: "#1E3354", accent: "#D4C4A0" },
+  { id: "charcoal", label: "فحمي", labelEn: "Charcoal", hex: "#3B3B3B", accent: "#C4A35A" },
+  { id: "terracotta", label: "طيني", labelEn: "Terracotta", hex: "#B85C38", accent: "#E8DCC8" },
+  { id: "sage", label: "أخضر هادئ", labelEn: "Sage", hex: "#8FA382", accent: "#F3EAD8" },
+  { id: "sand", label: "رملي", labelEn: "Sand", hex: "#C4B08A", accent: "#3A3228" },
+  { id: "burgundy", label: "عنابي", labelEn: "Burgundy", hex: "#6E2C3A", accent: "#E6D9C4" },
 ];
+
+export function isSofaConfig(value: unknown): value is SofaConfig {
+  if (!value || typeof value !== "object") return false;
+  const config = value as SofaConfig;
+  return (
+    [2, 3, 4, 5].includes(Number(config.seats)) &&
+    typeof config.arm === "string" &&
+    typeof config.legs === "string" &&
+    typeof config.fabricColor === "string" &&
+    typeof config.fabricType === "string" &&
+    typeof config.pillows === "string"
+  );
+}
 
 export const DEFAULT_SOFA: SofaConfig = {
   seats: 3,
@@ -109,33 +126,56 @@ export function estimateSofaPrice(config: SofaConfig) {
   return Math.round(price / 50) * 50;
 }
 
-export function sofaSummary(config: SofaConfig) {
-  const color = getFabricColor(config.fabricColor);
-  const seats = SEAT_OPTIONS.find((s) => s.id === config.seats)?.label ?? "";
-  const arm = ARM_OPTIONS.find((s) => s.id === config.arm)?.label ?? "";
-  const legs = LEG_OPTIONS.find((s) => s.id === config.legs)?.label ?? "";
-  const fabric = FABRIC_OPTIONS.find((s) => s.id === config.fabricType)?.label ?? "";
-  const pillows = PILLOW_OPTIONS.find((s) => s.id === config.pillows)?.label ?? "";
-  return `${seats} · ذراع ${arm} · أرجل ${legs} · ${fabric} ${color.label} · ${pillows}`;
+export function localizedLabel(
+  option: { label: string; labelEn: string },
+  locale: Locale,
+) {
+  return locale === "en" ? option.labelEn : option.label;
 }
 
-export function sofaStyleTag(config: SofaConfig) {
+export function sofaSummary(config: SofaConfig, locale: Locale = "ar") {
+  const color = getFabricColor(config.fabricColor);
+  const seats = localizedLabel(SEAT_OPTIONS.find((s) => s.id === config.seats) ?? SEAT_OPTIONS[0], locale);
+  const arm = localizedLabel(ARM_OPTIONS.find((s) => s.id === config.arm) ?? ARM_OPTIONS[0], locale);
+  const legs = localizedLabel(LEG_OPTIONS.find((s) => s.id === config.legs) ?? LEG_OPTIONS[0], locale);
+  const fabric = localizedLabel(FABRIC_OPTIONS.find((s) => s.id === config.fabricType) ?? FABRIC_OPTIONS[0], locale);
+  const pillows = localizedLabel(PILLOW_OPTIONS.find((s) => s.id === config.pillows) ?? PILLOW_OPTIONS[0], locale);
+  return t(locale, "sofa.summary", {
+    seats,
+    arm,
+    legs,
+    fabric,
+    color: localizedLabel(color, locale),
+    pillows,
+  });
+}
+
+export function sofaStyleTag(config: SofaConfig, locale: Locale = "ar") {
+  const tags = {
+    modern: { ar: "مودرن فاخر", en: "Luxe modern" },
+    velvet: { ar: "ملكي مخملي", en: "Royal velvet" },
+    scandi: { ar: "سكندنافي دافئ", en: "Warm Scandinavian" },
+    boucle: { ar: "بوكليه معاصر", en: "Contemporary bouclé" },
+    low: { ar: "منخفض وهادئ", en: "Low and calm" },
+    place: { ar: "ذوق Place", en: "Place signature" },
+  } as const;
+  const pick = (key: keyof typeof tags) => tags[key][locale];
   if (config.fabricType === "leather" && (config.fabricColor === "charcoal" || config.fabricColor === "navy")) {
-    return "مودرن فاخر";
+    return pick("modern");
   }
   if (config.fabricType === "velvet" && (config.legs === "gold" || config.fabricColor === "burgundy")) {
-    return "ملكي مخملي";
+    return pick("velvet");
   }
   if (config.fabricType === "linen" && (config.fabricColor === "cream" || config.fabricColor === "sand")) {
-    return "سكندنافي دافئ";
+    return pick("scandi");
   }
   if (config.fabricType === "boucle") {
-    return "بوكليه معاصر";
+    return pick("boucle");
   }
   if (config.arm === "none" && config.legs === "hidden") {
-    return "منخفض وهادئ";
+    return pick("low");
   }
-  return "ذوق Place";
+  return pick("place");
 }
 
 function pick<T>(items: T[]): T {
@@ -153,6 +193,7 @@ export function randomSofaConfig(): SofaConfig {
   };
 }
 
-export function formatSar(value: number) {
-  return new Intl.NumberFormat("ar-SA").format(value) + " ر.س";
+export function formatSar(value: number, locale: Locale = "ar") {
+  const formatted = new Intl.NumberFormat(locale === "en" ? "en-SA" : "ar-SA").format(value);
+  return t(locale, "guess.sar", { value: formatted });
 }

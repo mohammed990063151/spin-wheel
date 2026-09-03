@@ -1,9 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AuthModal, { type AuthUser } from "@/components/AuthModal";
 import SiteHeader from "@/components/SiteHeader";
+import { useLocale } from "@/components/LocaleProvider";
+import SofaSaveModal from "@/components/sofa/SofaSaveModal";
 import {
   ARM_OPTIONS,
   DEFAULT_SOFA,
@@ -14,6 +16,7 @@ import {
   SEAT_OPTIONS,
   estimateSofaPrice,
   formatSar,
+  localizedLabel,
   sofaStyleTag,
   sofaSummary,
   type ArmStyle,
@@ -27,8 +30,13 @@ import { loadPlaySession, savePlaySession } from "@/lib/session";
 
 const SofaCanvas = dynamic(() => import("@/components/sofa/SofaCanvas"), {
   ssr: false,
-  loading: () => <div className="sofa-canvas-fallback">جاري تجهيز الكنبة...</div>,
+  loading: () => <SofaCanvasFallback />,
 });
+
+function SofaCanvasFallback() {
+  const { t } = useLocale();
+  return <div className="sofa-canvas-fallback">{t("sofa.loading")}</div>;
+}
 
 function ChipGroup<T extends string | number>({
   label,
@@ -61,18 +69,23 @@ function ChipGroup<T extends string | number>({
 }
 
 export default function SofaStudio() {
+  const { locale, t } = useLocale();
   const [config, setConfig] = useState<SofaConfig>(DEFAULT_SOFA);
-  const [user, setUser] = useState<AuthUser | null>(() =>
-    typeof window === "undefined" ? null : loadPlaySession("sofa"),
-  );
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [showAuth, setShowAuth] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [shareUrl, setShareUrl] = useState("");
+  const [showQr, setShowQr] = useState(false);
+
+  useEffect(() => {
+    setUser(loadPlaySession("sofa"));
+  }, []);
 
   const price = useMemo(() => estimateSofaPrice(config), [config]);
-  const summary = useMemo(() => sofaSummary(config), [config]);
-  const style = useMemo(() => sofaStyleTag(config), [config]);
+  const summary = useMemo(() => sofaSummary(config, locale), [config, locale]);
+  const style = useMemo(() => sofaStyleTag(config, locale), [config, locale]);
 
   const patch = (partial: Partial<SofaConfig>) => {
     setConfig((prev) => ({ ...prev, ...partial }));
@@ -90,16 +103,25 @@ export default function SofaStudio() {
           name: player.name,
           phone: player.phone,
           config: next,
+          locale,
         }),
       });
-      const json = (await res.json()) as { ok?: boolean; message?: string };
-      if (!json.ok) {
-        setError(json.message || "تعذر حفظ التصميم");
+      const json = (await res.json()) as {
+        ok?: boolean;
+        message?: string;
+        sharePath?: string;
+      };
+      if (!json.ok || !json.sharePath) {
+        setError(json.message || t("api.saveFailed"));
         return;
       }
+      const origin =
+        process.env.NEXT_PUBLIC_SHARE_ORIGIN?.replace(/\/$/, "") || window.location.origin;
+      setShareUrl(`${origin}${json.sharePath}`);
       setSaved(true);
+      setShowQr(true);
     } catch {
-      setError("تعذر حفظ التصميم");
+      setError(t("api.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -127,40 +149,49 @@ export default function SofaStudio() {
 
       <section className="studio-shell">
         <div className="studio-stage">
-          <div className="studio-badge">Build Your Sofa ★★★★★</div>
-          <SofaCanvas config={config} />
+          <div className="studio-badge">{t("sofa.badge")}</div>
+          <SofaCanvas config={config} autoRotate={!showQr} />
           <div className="studio-price">
-            <strong>{formatSar(price)}</strong>
+            <strong>{formatSar(price, locale)}</strong>
             <span>{style}</span>
           </div>
         </div>
 
         <aside className="studio-panel">
-          <p className="studio-kicker">مصنع Place</p>
-          <h1>اصنع الكنبة بنفسك</h1>
-          <p className="studio-lead">اختر المقاعد والذراع والأرجل والقماش والوسائد، والنتيجة تظهر ثلاثية الأبعاد فوراً.</p>
+          <p className="studio-kicker">{t("sofa.kicker")}</p>
+          <h1>{t("sofa.title")}</h1>
+          <p className="studio-lead">{t("sofa.lead")}</p>
 
           <ChipGroup
-            label="عدد المقاعد"
-            options={SEAT_OPTIONS}
+            label={t("sofa.seats")}
+            options={SEAT_OPTIONS.map((option) => ({
+              id: option.id,
+              label: localizedLabel(option, locale),
+            }))}
             value={config.seats}
             onChange={(seats) => patch({ seats: seats as SeatCount })}
           />
           <ChipGroup
-            label="شكل الذراع"
-            options={ARM_OPTIONS}
+            label={t("sofa.arms")}
+            options={ARM_OPTIONS.map((option) => ({
+              id: option.id,
+              label: localizedLabel(option, locale),
+            }))}
             value={config.arm}
             onChange={(arm) => patch({ arm: arm as ArmStyle })}
           />
           <ChipGroup
-            label="نوع الأرجل"
-            options={LEG_OPTIONS}
+            label={t("sofa.legs")}
+            options={LEG_OPTIONS.map((option) => ({
+              id: option.id,
+              label: localizedLabel(option, locale),
+            }))}
             value={config.legs}
             onChange={(legs) => patch({ legs: legs as LegStyle })}
           />
 
           <fieldset className="sofa-field">
-            <legend>لون القماش</legend>
+            <legend>{t("sofa.fabricColor")}</legend>
             <div className="sofa-swatches">
               {FABRIC_COLORS.map((swatch) => (
                 <button
@@ -168,8 +199,8 @@ export default function SofaStudio() {
                   type="button"
                   className={`sofa-swatch ${config.fabricColor === swatch.id ? "is-on" : ""}`}
                   style={{ background: swatch.hex }}
-                  aria-label={swatch.label}
-                  title={swatch.label}
+                  aria-label={localizedLabel(swatch, locale)}
+                  title={localizedLabel(swatch, locale)}
                   onClick={() => patch({ fabricColor: swatch.id })}
                 />
               ))}
@@ -177,14 +208,20 @@ export default function SofaStudio() {
           </fieldset>
 
           <ChipGroup
-            label="نوع القماش"
-            options={FABRIC_OPTIONS.map(({ id, label }) => ({ id, label }))}
+            label={t("sofa.fabricType")}
+            options={FABRIC_OPTIONS.map((option) => ({
+              id: option.id,
+              label: localizedLabel(option, locale),
+            }))}
             value={config.fabricType}
             onChange={(fabricType) => patch({ fabricType: fabricType as FabricType })}
           />
           <ChipGroup
-            label="الوسائد"
-            options={PILLOW_OPTIONS}
+            label={t("sofa.pillows")}
+            options={PILLOW_OPTIONS.map((option) => ({
+              id: option.id,
+              label: localizedLabel(option, locale),
+            }))}
             value={config.pillows}
             onChange={(pillows) => patch({ pillows: pillows as PillowStyle })}
           />
@@ -192,27 +229,31 @@ export default function SofaStudio() {
           <p className="studio-summary">{summary}</p>
 
           {error && <p className="field-error">{error}</p>}
-          {saved && <p className="studio-saved">تم حفظ تصميمك في المصنع — سنتواصل معك.</p>}
+          {saved && <p className="studio-saved">{t("sofa.saved")}</p>}
 
           <button type="button" className="cta-btn studio-save" disabled={saving} onClick={handleSave}>
-            {saving ? "جاري الحفظ..." : user ? "احفظ التصميم" : "سجّل واحفظ التصميم"}
+            {saving ? t("sofa.saving") : user ? t("sofa.save") : t("sofa.saveRegister")}
           </button>
         </aside>
       </section>
 
       <AuthModal
         brand="sofa"
+        variant="sofa"
         open={showAuth}
         onClose={() => setShowAuth(false)}
-        registerTitle="سجّل ثم احفظ كنبتك"
-        otpTitle="أدخل الكود"
-        lead="نرسل كود تأكيد برسالة ثم نحفظ التصميم لفريق Place"
         onVerified={(data) => {
           savePlaySession("sofa", { ...data, alreadySpun: false });
           setUser(data);
           setShowAuth(false);
           void persist(data);
         }}
+      />
+
+      <SofaSaveModal
+        open={showQr}
+        shareUrl={shareUrl}
+        onClose={() => setShowQr(false)}
       />
     </main>
   );

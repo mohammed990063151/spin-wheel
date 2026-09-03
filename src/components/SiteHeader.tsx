@@ -1,22 +1,28 @@
 "use client";
 
+import LangSwitch from "@/components/LangSwitch";
+import { useLocale } from "@/components/LocaleProvider";
+
 interface SiteHeaderProps {
   active?: "home" | "sofa" | "guess";
 }
 
 export default function SiteHeader({ active = "home" }: SiteHeaderProps) {
+  const { t } = useLocale();
+
   return (
     <header className="site-topbar">
       <a className="site-topbar-brand" href="/" lang="en">
         PLACE × ENALA
       </a>
-      <nav className="site-topbar-nav" aria-label="الألعاب">
+      <nav className="site-topbar-nav" aria-label={t("header.nav")}>
         <a className={`site-topbar-btn ${active === "sofa" ? "is-active" : ""}`} href="/sofa">
-          اصنع كنبتك <span aria-hidden>★★★★★</span>
+          {t("header.sofa")}
         </a>
         <a className={`site-topbar-btn is-game ${active === "guess" ? "is-active" : ""}`} href="/guess">
-          خمن السعر
+          {t("header.guess")}
         </a>
+        <LangSwitch />
       </nav>
     </header>
   );

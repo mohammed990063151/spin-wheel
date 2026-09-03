@@ -3,6 +3,7 @@ import { findParticipant, savePrize } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affCompleteSpin, clientMeta } from "@/lib/aff";
 import { isBrandId } from "@/lib/prizes";
+import { isDevPhone } from "@/lib/dev";
 
 export async function POST(request: Request) {
   let body: {
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     ...meta,
   };
 
-  if (participant.spun_at) {
+  if (participant.spun_at && !isDevPhone(phone)) {
     await affCompleteSpin({
       ...affPayload,
       prize_id: participant.prize_id || prizeId,
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     });
   }
 
-  savePrize(phone, brand, prizeId, prizeLabel);
+  savePrize(phone, brand, prizeId, prizeLabel, { overwrite: isDevPhone(phone) });
   await affCompleteSpin(affPayload);
 
   return NextResponse.json({ ok: true });

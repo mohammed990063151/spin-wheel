@@ -11,12 +11,14 @@ import {
 import {
   getPrizeAtRotation,
   pickPrizeIndex,
+  prizeLabel,
   rotationForPrize,
   segmentAngle,
   segmentCount,
   type Prize,
 } from "@/lib/prizes";
 import { playTick, playWinFanfare, resumeAudio } from "@/lib/audio";
+import { useLocale } from "@/components/LocaleProvider";
 
 export interface SpinWheelHandle {
   spin: () => void;
@@ -47,6 +49,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
   { prizes, userName, onWin, disabled = false, onRequestSpin },
   ref,
 ) {
+  const { locale, t } = useLocale();
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [pointerKick, setPointerKick] = useState(0);
@@ -165,13 +168,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
   return (
     <div className="wheel-stage">
       <p className="wheel-greeting" data-testid="wheel-greeting">
-        {userName ? (
-          <>
-            حظاً موفقاً، <strong>{userName}</strong>
-          </>
-        ) : (
-          "اضغط لف للتسجيل"
-        )}
+        {userName ? t("spin.greetingNamed", { name: userName }) : t("spin.greeting")}
       </p>
 
       <div className={`wheel-frame ${glowPulse ? "is-spinning" : ""}`}>
@@ -223,7 +220,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
             viewBox={`0 0 ${size} ${size}`}
             className="wheel-svg"
             role="img"
-            aria-label="عجلة الجوائز"
+            aria-label={t("spin.wheelLabel")}
           >
             <defs>
               {prizes.map((p, i) => (
@@ -260,7 +257,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
                     fontFamily="var(--font-cairo), sans-serif"
                     style={{ letterSpacing: "0.02em" }}
                   >
-                    {prize.label}
+                    {prizeLabel(prize, locale)}
                   </text>
                 </g>
               </g>
@@ -305,17 +302,17 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
         aria-busy={spinning}
       >
         {spinning ? (
-          <span className="spin-btn-label">تدور...</span>
+          <span className="spin-btn-label">{t("spin.spinning")}</span>
         ) : (
-          <span className="spin-btn-label">لف</span>
+          <span className="spin-btn-label">{t("spin.button")}</span>
         )}
       </button>
 
-      <ul className="prize-legend" aria-label="الجوائز">
+      <ul className="prize-legend" aria-label={t("spin.legend")}>
         {prizes.map((p) => (
           <li key={p.id}>
             <span className="legend-dot" style={{ background: p.color }} />
-            {p.label}
+            {prizeLabel(p, locale)}
           </li>
         ))}
       </ul>

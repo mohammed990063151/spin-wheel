@@ -6,6 +6,7 @@ import AuthModal, { type AuthUser } from "@/components/AuthModal";
 import PrizeModal from "@/components/PrizeModal";
 import Confetti from "@/components/Confetti";
 import SiteHeader from "@/components/SiteHeader";
+import { useLocale } from "@/components/LocaleProvider";
 import {
   estimateSofaPrice,
   formatSar,
@@ -20,11 +21,17 @@ import {
   type GuessPrize,
 } from "@/lib/guess";
 import { clearPlaySession, loadPlaySession, savePlaySession } from "@/lib/session";
+import { isDevPhone } from "@/lib/dev";
 
 const SofaCanvas = dynamic(() => import("@/components/sofa/SofaCanvas"), {
   ssr: false,
-  loading: () => <div className="sofa-canvas-fallback">جاري تجهيز الكنبة...</div>,
+  loading: () => <GuessCanvasFallback />,
 });
+
+function GuessCanvasFallback() {
+  const { t } = useLocale();
+  return <div className="sofa-canvas-fallback">{t("guess.loading")}</div>;
+}
 
 type Phase = "intro" | "playing" | "result";
 
@@ -42,6 +49,7 @@ function makeRound(): RoundState {
 }
 
 export default function GuessGame() {
+  const { locale, t } = useLocale();
   const [phase, setPhase] = useState<Phase>("intro");
   const [roundIndex, setRoundIndex] = useState(0);
   const [rounds, setRounds] = useState<RoundState[]>([]);
@@ -67,7 +75,7 @@ export default function GuessGame() {
     () => rounds.filter((round) => round.picked === round.price).length,
     [rounds],
   );
-  const style = current ? sofaStyleTag(current.sofa) : "ذوق Place";
+  const style = current ? sofaStyleTag(current.sofa, locale) : "";
 
   const resetForNext = () => {
     clearPlaySession("guess");
@@ -106,7 +114,7 @@ export default function GuessGame() {
         phone: player.phone,
         score: finalScore,
         maxScore: finalRounds.length,
-        styleTag: sofaStyleTag(finalRounds[finalRounds.length - 1]?.sofa ?? randomSofaConfig()),
+        styleTag: sofaStyleTag(finalRounds[finalRounds.length - 1]?.sofa ?? randomSofaConfig(), "ar"),
         prizeId: nextPrize.id,
         prizeLabel: nextPrize.label,
         prizeDescription: nextPrize.description,
@@ -176,12 +184,14 @@ export default function GuessGame() {
 
   const handleStart = () => {
     const saved = loadPlaySession("guess");
-    if (saved?.alreadySpun) {
+    if (saved?.alreadySpun && !isDevPhone(saved.phone)) {
       setUser(saved);
       setPrize({
         id: "played",
-        label: saved.prizeLabel || "لعبت سابقاً",
+        label: "لعبت سابقاً",
+        labelEn: "Already played",
         description: "كل زائر يلعب مرة واحدة — شكراً لمشاركتك",
+        descriptionEn: "Each visitor plays once — thank you for joining",
         empty: true,
       });
       setPhase("result");
@@ -208,18 +218,16 @@ export default function GuessGame() {
 
       {phase === "intro" && (
         <section className="guess-intro">
-          <p className="studio-kicker">لعبة المصنع</p>
-          <h1>خمن سعر الكنبة</h1>
-          <p>
-            ثلاث كنبات ثلاثية الأبعاد من Place. خمن السعر الصحيح خلال ثوانٍ، وكلما اقترب ذوقك من سعر المصنع ربحت هدية أقوى.
-          </p>
+          <p className="studio-kicker">{t("guess.kicker")}</p>
+          <h1>{t("guess.title")}</h1>
+          <p>{t("guess.lead")}</p>
           <ul className="guess-prizes">
-            <li>٣ إجابات: خصم ١٥٪ على كنبتك</li>
-            <li>إجابتان: وسادة مخملية</li>
-            <li>إجابة: استشارة تصميم</li>
+            <li>{t("guess.prize3")}</li>
+            <li>{t("guess.prize2")}</li>
+            <li>{t("guess.prize1")}</li>
           </ul>
           <button type="button" className="cta-btn" onClick={handleStart}>
-            ابدأ اللعبة
+            {t("guess.start")}
           </button>
         </section>
       )}
@@ -228,17 +236,17 @@ export default function GuessGame() {
         <section className="studio-shell">
           <div className="studio-stage">
             <div className="studio-badge">
-              الجولة {roundIndex + 1} / 3 · {seconds}ث
+              {t("guess.round", { n: roundIndex + 1, s: seconds })}
             </div>
             <SofaCanvas config={current.sofa} autoRotate />
             <div className="studio-price">
               <strong>{style}</strong>
-              <span>ما سعر هذه الكنبة؟</span>
+              <span>{t("guess.askPrice")}</span>
             </div>
           </div>
           <aside className="studio-panel">
-            <h1>خمن السعر</h1>
-            <p className="studio-lead">اختر أقرب سعر قبل انتهاء الوقت. فرصة واحدة لكل زائر.</p>
+            <h1>{t("guess.title")}</h1>
+            <p className="studio-lead">{t("guess.playLead")}</p>
             <div className="guess-options">
               {current.options.map((option) => {
                 const correct = locked && option === current.price;
@@ -251,12 +259,12 @@ export default function GuessGame() {
                     disabled={locked}
                     onClick={() => choose(option)}
                   >
-                    {formatSar(option)}
+                    {formatSar(option, locale)}
                   </button>
                 );
               })}
             </div>
-            <p className="studio-summary">النقاط حتى الآن: {score} / {rounds.length}</p>
+            <p className="studio-summary">{t("guess.score", { score, total: rounds.length })}</p>
           </aside>
         </section>
       )}
@@ -264,20 +272,23 @@ export default function GuessGame() {
       <AuthModal
         key={authSession}
         brand="guess"
+        variant="guess"
         open={showAuth}
         onClose={() => setShowAuth(false)}
-        registerTitle="سجّل ثم خمن السعر"
-        otpTitle="أدخل الكود"
-        lead="نرسل كود تأكيد برسالة — لعبة واحدة لكل جوال"
         onVerified={(data) => {
-          savePlaySession("guess", { ...data, alreadySpun: data.alreadySpun });
+          savePlaySession("guess", {
+            ...data,
+            alreadySpun: data.alreadySpun && !isDevPhone(data.phone),
+          });
           setUser(data);
           setShowAuth(false);
-          if (data.alreadySpun) {
+          if (data.alreadySpun && !isDevPhone(data.phone)) {
             setPrize({
-              id: "played",
-              label: data.prizeLabel || "لعبت سابقاً",
+              id: "played_phone",
+              label: "لعبت سابقاً",
+              labelEn: "Already played",
               description: "سبق أن لعبت خمن السعر بهذا الرقم",
+              descriptionEn: "This number has already played Guess the Price",
               empty: true,
             });
             setPhase("result");
@@ -289,9 +300,26 @@ export default function GuessGame() {
 
       <PrizeModal
         open={phase === "result" && !!prize}
-        prizeLabel={prize?.label ?? ""}
+        prizeLabel={
+          prize?.id === "played" || prize?.id === "played_phone"
+            ? t("guess.played")
+            : prize
+              ? locale === "en"
+                ? prize.labelEn
+                : prize.label
+              : ""
+        }
         prizeDescription={
-          prize ? `${prize.description} · نتيجتك ${score} من 3` : ""
+          prize?.id === "played"
+            ? t("guess.playedDesc")
+            : prize?.id === "played_phone"
+              ? t("guess.playedPhone")
+              : prize
+                ? t("guess.resultExtra", {
+                    description: locale === "en" ? prize.descriptionEn : prize.description,
+                    score,
+                  })
+                : ""
         }
         userName={user?.name ?? ""}
         isEmpty={Boolean(prize?.empty)}

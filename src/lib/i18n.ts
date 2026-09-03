@@ -1,0 +1,308 @@
+export type Locale = "ar" | "en";
+
+export const LOCALES: Locale[] = ["ar", "en"];
+export const DEFAULT_LOCALE: Locale = "ar";
+export const LOCALE_COOKIE = "spin-locale";
+export const LOCALE_STORAGE = "spin-locale";
+
+export function isLocale(value: unknown): value is Locale {
+  return value === "ar" || value === "en";
+}
+
+export function parseLocale(value: unknown): Locale {
+  return isLocale(value) ? value : DEFAULT_LOCALE;
+}
+
+export function localeDir(locale: Locale): "rtl" | "ltr" {
+  return locale === "ar" ? "rtl" : "ltr";
+}
+
+const ar = {
+  "meta.title": "عجلة الحظ | Place × Enala",
+  "meta.description": "مسابقة عجلة الحظ — فنادق إنالة ومصنع Place",
+
+  "header.nav": "الألعاب",
+  "header.sofa": "اصنع كنبتك",
+  "header.guess": "خمن السعر",
+  "header.language": "اللغة",
+  "header.ar": "عربي",
+  "header.en": "EN",
+  "header.back": "العودة",
+
+  "home.kicker": "PLACE × ENALA — INDEX 2026",
+  "home.title": "مسابقة عجلة الحظ",
+  "home.lead": "اختر الشاشة التفاعلية ثم سجّل بالاسم والجوال ولف العجلة",
+  "home.enala.badge": "الجائزة الكبرى · ليلة مجانية",
+  "home.enala.title": "فنادق إنالة",
+  "home.enala.prizes": "خصم 20% · كوبون 500 · كوبون 1000 · ليلة مجانية",
+  "home.enala.cta": "دخول عجلة إنالة",
+  "home.place.badge": "أثاث فاخر · خصم ووسادة وتركيب",
+  "home.place.title": "مصنع الأثاث",
+  "home.place.prizes": "خصم · وسادة · توصيل · تركيب",
+  "home.place.cta": "دخول عجلة Place",
+
+  "spin.tagline.place": "لف العجلة واربح",
+  "spin.support.place": "سجّل بالجوال ثم لف",
+  "spin.footer.place": "فرصة واحدة لكل عميل",
+  "spin.tagline.enala": "مسابقة عجلة الحظ",
+  "spin.support.enala": "سجّل بالاسم والجوال ثم لف",
+  "spin.footer.enala": "هديتك تُسجّل على موقع إنالة",
+  "spin.greeting": "اضغط لف للتسجيل",
+  "spin.greetingNamed": "حظاً موفقاً، {name}",
+  "spin.button": "لف",
+  "spin.spinning": "تدور...",
+  "spin.legend": "الجوائز",
+  "spin.wheelLabel": "عجلة الجوائز",
+
+  "prize.congrats": "مبروك {name}",
+  "prize.betterLuck": "حظ أوفر {name}",
+  "prize.won": "ربحت",
+  "prize.missed": "لم تربح",
+  "prize.next": "عميل جديد",
+
+  "auth.eyebrow": "بالجوال",
+  "auth.close": "إغلاق",
+  "auth.registerTitle": "سجّل ثم لف",
+  "auth.otpTitle": "أدخل الكود",
+  "auth.lead": "نرسل كود تأكيد برسالة",
+  "auth.sofa.registerTitle": "سجّل ثم احفظ كنبتك",
+  "auth.sofa.lead": "نرسل كود تأكيد برسالة ثم نحفظ التصميم لفريق Place",
+  "auth.guess.registerTitle": "سجّل ثم خمن السعر",
+  "auth.guess.lead": "نرسل كود تأكيد برسالة — لعبة واحدة لكل جوال",
+  "auth.smsTo": "رسالة إلى {phone}",
+  "auth.send": "أرسل الكود",
+  "auth.sending": "جاري الإرسال...",
+  "auth.otpLabel": "كود الرسالة",
+  "auth.devCode": "كود التجربة: {code}",
+  "auth.confirm": "تأكيد",
+  "auth.verifying": "جاري التحقق...",
+  "auth.resend": "إعادة إرسال الكود",
+  "auth.changePhone": "تغيير الرقم",
+  "auth.name": "الاسم",
+  "auth.namePlaceholder": "مثال: أحمد محمد",
+  "auth.phone": "رقم الجوال",
+  "auth.phoneHint": "نرسل كود للجوال",
+  "auth.nameRequired": "أدخل الاسم",
+  "auth.phoneInvalid": "أدخل رقم جوال صحيح",
+  "auth.codeLength": "أدخل الكود المكوّن من 4 أرقام",
+  "auth.codeWrong": "كود التحقق غير صحيح",
+  "auth.genericError": "هناك خطأ ما حاول مرة اخري",
+
+  "api.invalidData": "بيانات غير صحيحة",
+  "api.nameRequired": "الاسم مطلوب",
+  "api.phoneRequired": "رقم الجوال مطلوب",
+  "api.phoneInvalid": "أدخل رقم جوال صحيح",
+  "api.codeLength": "أدخل الكود المكوّن من 4 أرقام",
+  "api.codeMismatch": "الكود غير مطابق، تأكد من آخر رسالة ثم أعد المحاولة",
+  "api.verifyFailed": "حدث خطأ أثناء التحقق، حاول مرة أخرى",
+  "api.resendWait": "انتظر {n} ثانية ثم أعد الإرسال",
+  "api.smsFailed": "هناك خطأ ما حاول مرة اخري",
+  "api.otpStoreFailed": "تم إرسال الرسالة وتعذر حفظ الكود، أعد الإرسال",
+  "api.saveFailed": "تعذر حفظ التصميم",
+  "api.saveIncomplete": "أكمل البيانات أولاً",
+
+  "sofa.loading": "جاري تجهيز الكنبة...",
+  "sofa.badge": "اصنع كنبتك",
+  "sofa.kicker": "مصنع Place",
+  "sofa.title": "اصنع الكنبة بنفسك",
+  "sofa.lead": "اختر المقاعد والذراع والأرجل والقماش والوسائد، والنتيجة تظهر ثلاثية الأبعاد فوراً.",
+  "sofa.seats": "عدد المقاعد",
+  "sofa.arms": "شكل الذراع",
+  "sofa.legs": "نوع الأرجل",
+  "sofa.fabricColor": "لون القماش",
+  "sofa.fabricType": "نوع القماش",
+  "sofa.pillows": "الوسائد",
+  "sofa.saved": "تم حفظ تصميمك في المصنع — سنتواصل معك.",
+  "sofa.save": "احفظ التصميم",
+  "sofa.saveRegister": "سجّل واحفظ التصميم",
+  "sofa.saving": "جاري الحفظ...",
+  "sofa.summary": "{seats} · ذراع {arm} · أرجل {legs} · {fabric} {color} · {pillows}",
+  "sofa.qrTitle": "امسح الباركود",
+  "sofa.qrLead": "افتح التصميم على جوالك واحفظ صورة الكنبة.",
+  "sofa.qrScan": "وجّه كاميرا الجوال إلى الباركود",
+  "sofa.saveImage": "حفظ الصورة",
+  "sofa.savingImage": "جاري تجهيز الصورة...",
+  "sofa.closeQr": "تم",
+  "sofa.shareTitle": "تصميمك جاهز",
+  "sofa.shareLead": "مرحباً {name} — احفظ صورة الكنبة في جوالك.",
+
+  "guess.loading": "جاري تجهيز الكنبة...",
+  "guess.kicker": "لعبة المصنع",
+  "guess.title": "خمن سعر الكنبة",
+  "guess.lead": "ثلاث كنبات ثلاثية الأبعاد من Place. خمن السعر الصحيح خلال ثوانٍ، وكلما اقترب ذوقك من سعر المصنع ربحت هدية أقوى.",
+  "guess.prize3": "٣ إجابات: خصم ١٥٪ على كنبتك",
+  "guess.prize2": "إجابتان: وسادة مخملية",
+  "guess.prize1": "إجابة: استشارة تصميم",
+  "guess.start": "ابدأ اللعبة",
+  "guess.round": "الجولة {n} / 3 · {s}ث",
+  "guess.askPrice": "ما سعر هذه الكنبة؟",
+  "guess.playLead": "اختر أقرب سعر قبل انتهاء الوقت. فرصة واحدة لكل زائر.",
+  "guess.score": "النقاط حتى الآن: {score} / {total}",
+  "guess.resultExtra": "{description} · نتيجتك {score} من 3",
+  "guess.played": "لعبت سابقاً",
+  "guess.playedDesc": "كل زائر يلعب مرة واحدة — شكراً لمشاركتك",
+  "guess.playedPhone": "سبق أن لعبت خمن السعر بهذا الرقم",
+  "guess.sar": "{value} ر.س",
+} as const;
+
+const en: Record<keyof typeof ar, string> = {
+  "meta.title": "Spin the Wheel | Place × Enala",
+  "meta.description": "Spin-the-wheel prize draw — Enala hotels and Place furniture",
+
+  "header.nav": "Games",
+  "header.sofa": "Build your sofa",
+  "header.guess": "Guess the price",
+  "header.language": "Language",
+  "header.ar": "عربي",
+  "header.en": "EN",
+  "header.back": "Back",
+
+  "home.kicker": "PLACE × ENALA — INDEX 2026",
+  "home.title": "Spin the Wheel",
+  "home.lead": "Pick a screen, register with your name and mobile, then spin",
+  "home.enala.badge": "Grand prize · Free night",
+  "home.enala.title": "Enala Hotels",
+  "home.enala.prizes": "20% off · SAR 500 · SAR 1000 · Free night",
+  "home.enala.cta": "Enter Enala wheel",
+  "home.place.badge": "Luxury furniture · Discount, pillow & assembly",
+  "home.place.title": "Furniture factory",
+  "home.place.prizes": "Discount · Pillow · Delivery · Assembly",
+  "home.place.cta": "Enter Place wheel",
+
+  "spin.tagline.place": "Spin and win",
+  "spin.support.place": "Register with your mobile, then spin",
+  "spin.footer.place": "One spin per guest",
+  "spin.tagline.enala": "Prize wheel contest",
+  "spin.support.enala": "Register with your name and mobile, then spin",
+  "spin.footer.enala": "Your gift is saved on the Enala site",
+  "spin.greeting": "Tap spin to register",
+  "spin.greetingNamed": "Good luck, {name}",
+  "spin.button": "Spin",
+  "spin.spinning": "Spinning...",
+  "spin.legend": "Prizes",
+  "spin.wheelLabel": "Prize wheel",
+
+  "prize.congrats": "Congrats {name}",
+  "prize.betterLuck": "Better luck {name}",
+  "prize.won": "You won",
+  "prize.missed": "No prize this time",
+  "prize.next": "Next guest",
+
+  "auth.eyebrow": "Mobile",
+  "auth.close": "Close",
+  "auth.registerTitle": "Register then spin",
+  "auth.otpTitle": "Enter the code",
+  "auth.lead": "We send a confirmation code by SMS",
+  "auth.sofa.registerTitle": "Register then save your sofa",
+  "auth.sofa.lead": "We send a code by SMS, then save the design for the Place team",
+  "auth.guess.registerTitle": "Register then guess the price",
+  "auth.guess.lead": "We send a confirmation code by SMS — one game per mobile",
+  "auth.smsTo": "SMS sent to {phone}",
+  "auth.send": "Send code",
+  "auth.sending": "Sending...",
+  "auth.otpLabel": "SMS code",
+  "auth.devCode": "Test code: {code}",
+  "auth.confirm": "Confirm",
+  "auth.verifying": "Checking...",
+  "auth.resend": "Resend code",
+  "auth.changePhone": "Change number",
+  "auth.name": "Name",
+  "auth.namePlaceholder": "e.g. Ahmed Mohammed",
+  "auth.phone": "Mobile number",
+  "auth.phoneHint": "We send a code to your phone",
+  "auth.nameRequired": "Enter your name",
+  "auth.phoneInvalid": "Enter a valid mobile number",
+  "auth.codeLength": "Enter the 4-digit code",
+  "auth.codeWrong": "Incorrect verification code",
+  "auth.genericError": "Something went wrong, try again",
+
+  "api.invalidData": "Invalid data",
+  "api.nameRequired": "Name is required",
+  "api.phoneRequired": "Mobile number is required",
+  "api.phoneInvalid": "Enter a valid mobile number",
+  "api.codeLength": "Enter the 4-digit code",
+  "api.codeMismatch": "Code does not match. Check the latest SMS and try again",
+  "api.verifyFailed": "Verification failed, please try again",
+  "api.resendWait": "Wait {n} seconds before resending",
+  "api.smsFailed": "Something went wrong, try again",
+  "api.otpStoreFailed": "The SMS was sent but the code could not be saved. Please resend",
+  "api.saveFailed": "Could not save the design",
+  "api.saveIncomplete": "Complete the details first",
+
+  "sofa.loading": "Preparing the sofa...",
+  "sofa.badge": "Build your sofa",
+  "sofa.kicker": "Place factory",
+  "sofa.title": "Build your sofa",
+  "sofa.lead": "Choose seats, arms, legs, fabric and pillows. The 3D sofa updates instantly.",
+  "sofa.seats": "Seats",
+  "sofa.arms": "Arm style",
+  "sofa.legs": "Legs",
+  "sofa.fabricColor": "Fabric color",
+  "sofa.fabricType": "Fabric type",
+  "sofa.pillows": "Pillows",
+  "sofa.saved": "Your design is saved with the factory — we will contact you.",
+  "sofa.save": "Save design",
+  "sofa.saveRegister": "Register and save",
+  "sofa.saving": "Saving...",
+  "sofa.summary": "{seats} · {arm} arms · {legs} legs · {fabric} {color} · {pillows}",
+  "sofa.qrTitle": "Scan the barcode",
+  "sofa.qrLead": "Open the design on your phone and save the sofa photo.",
+  "sofa.qrScan": "Point your camera at the barcode",
+  "sofa.saveImage": "Save photo",
+  "sofa.savingImage": "Preparing photo...",
+  "sofa.closeQr": "Done",
+  "sofa.shareTitle": "Your design is ready",
+  "sofa.shareLead": "Hi {name} — save the sofa photo to your phone.",
+
+  "guess.loading": "Preparing the sofa...",
+  "guess.kicker": "Factory game",
+  "guess.title": "Guess the sofa price",
+  "guess.lead": "Three 3D sofas from Place. Guess the correct price in seconds — closer guesses win better gifts.",
+  "guess.prize3": "3 correct: 15% off your sofa",
+  "guess.prize2": "2 correct: velvet pillow",
+  "guess.prize1": "1 correct: design consult",
+  "guess.start": "Start game",
+  "guess.round": "Round {n} / 3 · {s}s",
+  "guess.askPrice": "What is this sofa worth?",
+  "guess.playLead": "Pick the closest price before time runs out. One play per visitor.",
+  "guess.score": "Score so far: {score} / {total}",
+  "guess.resultExtra": "{description} · Your score {score} of 3",
+  "guess.played": "Already played",
+  "guess.playedDesc": "Each visitor plays once — thank you for joining",
+  "guess.playedPhone": "This number has already played Guess the Price",
+  "guess.sar": "SAR {value}",
+};
+
+export const messages = { ar, en };
+
+export type MessageKey = keyof typeof ar;
+
+export function t(
+  locale: Locale,
+  key: MessageKey,
+  vars?: Record<string, string | number>,
+): string {
+  let text: string = messages[locale][key] || messages.ar[key];
+  if (vars) {
+    for (const [name, value] of Object.entries(vars)) {
+      text = text.replaceAll(`{${name}}`, String(value));
+    }
+  }
+  return text;
+}
+
+export function applyDocumentLocale(locale: Locale) {
+  if (typeof document === "undefined") return;
+  document.documentElement.lang = locale;
+  document.documentElement.dir = localeDir(locale);
+  document.title = t(locale, "meta.title");
+}
+
+export function persistLocale(locale: Locale) {
+  try {
+    localStorage.setItem(LOCALE_STORAGE, locale);
+  } catch {
+    /* ignore */
+  }
+  document.cookie = `${LOCALE_COOKIE}=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+}

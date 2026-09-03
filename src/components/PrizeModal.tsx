@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/components/LocaleProvider";
+
 interface PrizeModalProps {
   open: boolean;
   prizeLabel: string;
@@ -17,6 +19,7 @@ export default function PrizeModal({
   isEmpty = false,
   onClose,
 }: PrizeModalProps) {
+  const { t } = useLocale();
   if (!open) return null;
 
   return (
@@ -24,16 +27,18 @@ export default function PrizeModal({
       <div className={`modal-card ${isEmpty ? "is-miss" : ""}`}>
         {!isEmpty && <div className="modal-burst" aria-hidden />}
         <p className="modal-eyebrow">
-          {isEmpty ? `حظ أوفر ${userName}` : `مبروك ${userName}`}
+          {isEmpty
+            ? t("prize.betterLuck", { name: userName })
+            : t("prize.congrats", { name: userName })}
         </p>
         <h2 id="win-title" className="modal-title">
-          {isEmpty ? "لم تربح" : "ربحت"}
+          {isEmpty ? t("prize.missed") : t("prize.won")}
         </h2>
         <p className="modal-prize">{prizeLabel}</p>
         <p className="modal-desc">{prizeDescription}</p>
         <div className="modal-actions">
           <button type="button" className="cta-btn" onClick={onClose}>
-            عميل جديد
+            {t("prize.next")}
           </button>
         </div>
       </div>

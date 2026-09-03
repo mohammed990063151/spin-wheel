@@ -1,40 +1,30 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { createParticipant, findParticipant } from "@/lib/db";
+import { createParticipant, findParticipant, saveSofaDesign } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affSaveSofa, clientMeta } from "@/lib/aff";
+import { parseLocale, t } from "@/lib/i18n";
 import {
   estimateSofaPrice,
   getFabricColor,
+  isSofaConfig,
   sofaStyleTag,
   sofaSummary,
-  type SofaConfig,
 } from "@/lib/sofa";
 
-function isSofaConfig(value: unknown): value is SofaConfig {
-  if (!value || typeof value !== "object") return false;
-  const config = value as SofaConfig;
-  return (
-    [2, 3, 4, 5].includes(Number(config.seats)) &&
-    typeof config.arm === "string" &&
-    typeof config.legs === "string" &&
-    typeof config.fabricColor === "string" &&
-    typeof config.fabricType === "string" &&
-    typeof config.pillows === "string"
-  );
-}
-
 export async function POST(request: Request) {
-  let body: { name?: string; phone?: string; config?: unknown };
+  let body: { name?: string; phone?: string; config?: unknown; locale?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
-    return NextResponse.json({ ok: false, message: "بيانات غير صحيحة" }, { status: 400 });
+    return NextResponse.json({ ok: false, message: t("ar", "api.invalidData") }, { status: 400 });
   }
 
+  const locale = parseLocale(body.locale);
   const name = (body.name ?? "").trim();
   const phone = normalizePhone(body.phone ?? "");
   if (!name || !isValidPhone(phone) || !isSofaConfig(body.config)) {
-    return NextResponse.json({ ok: false, message: "أكمل البيانات أولاً" }, { status: 400 });
+    return NextResponse.json({ ok: false, message: t(locale, "api.saveIncomplete") }, { status: 400 });
   }
 
   const config = body.config;
@@ -42,27 +32,47 @@ export async function POST(request: Request) {
     createParticipant(name, phone, "sofa");
   }
 
-  const color = getFabricColor(config.fabricColor);
-  const aff = await affSaveSofa({
-    name,
-    phone,
-    seats: config.seats,
-    arm_style: config.arm,
-    leg_style: config.legs,
-    fabric_color: config.fabricColor,
-    fabric_color_hex: color.hex,
-    fabric_type: config.fabricType,
-    pillows: config.pillows,
-    estimated_price: estimateSofaPrice(config),
-    summary: sofaSummary(config),
-    style_tag: sofaStyleTag(config),
-    config,
-    ...clientMeta(request),
-  });
-
-  if (aff && aff.ok === false) {
-    return NextResponse.json({ ok: false, message: aff.message || "تعذر الحفظ" }, { status: 422 });
+  const token = randomBytes(12).toString("hex");
+  try {
+    saveSofaDesign({
+      token,
+      name,
+      phone,
+      configJson: JSON.stringify(config),
+    });
+  } catch (error) {
+    console.error("[sofa-save] store", error);
+    return NextResponse.json({ ok: false, message: t(locale, "api.saveFailed") }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true });
+  const color = getFabricColor(config.fabricColor);
+  try {
+    const aff = await affSaveSofa({
+      name,
+      phone,
+      seats: config.seats,
+      arm_style: config.arm,
+      leg_style: config.legs,
+      fabric_color: config.fabricColor,
+      fabric_color_hex: color.hex,
+      fabric_type: config.fabricType,
+      pillows: config.pillows,
+      estimated_price: estimateSofaPrice(config),
+      summary: sofaSummary(config),
+      style_tag: sofaStyleTag(config),
+      config,
+      ...clientMeta(request),
+    });
+    if (aff && aff.ok === false) {
+      console.error("[sofa-save] aff", aff.message);
+    }
+  } catch (error) {
+    console.error("[sofa-save] aff", error);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    token,
+    sharePath: `/sofa/d/${token}`,
+  });
 }

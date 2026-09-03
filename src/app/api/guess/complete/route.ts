@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createParticipant, findParticipant, savePrize } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affGuessComplete, clientMeta } from "@/lib/aff";
+import { isDevPhone } from "@/lib/dev";
 
 export async function POST(request: Request) {
   let body: {
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     participant = createParticipant(name, phone, "guess");
   }
 
-  if (participant.spun_at) {
+  if (participant.spun_at && !isDevPhone(phone)) {
     return NextResponse.json({
       ok: false,
       already_spun: true,
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     });
   }
 
-  savePrize(phone, "guess", prizeId, prizeLabel);
+  savePrize(phone, "guess", prizeId, prizeLabel, { overwrite: isDevPhone(phone) });
   await affGuessComplete({
     name,
     phone,

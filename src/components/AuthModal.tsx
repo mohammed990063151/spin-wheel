@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import UserForm, { type UserData } from "@/components/UserForm";
+import { useLocale } from "@/components/LocaleProvider";
 import type { ChannelId } from "@/lib/channels";
 import { normalizeOtpCode } from "@/lib/phone";
 
@@ -15,9 +16,7 @@ interface AuthModalProps {
   brand: ChannelId;
   onClose: () => void;
   onVerified: (user: AuthUser) => void;
-  registerTitle?: string;
-  otpTitle?: string;
-  lead?: string;
+  variant?: "spin" | "sofa" | "guess";
 }
 
 type Step = "register" | "otp";
@@ -27,10 +26,9 @@ export default function AuthModal({
   brand,
   onClose,
   onVerified,
-  registerTitle = "سجّل ثم لف",
-  otpTitle = "أدخل الكود",
-  lead = "نرسل كود تأكيد برسالة",
+  variant = "spin",
 }: AuthModalProps) {
+  const { locale, t } = useLocale();
   const [step, setStep] = useState<Step>("register");
   const [pending, setPending] = useState<UserData | null>(null);
   const [code, setCode] = useState("");
@@ -39,24 +37,40 @@ export default function AuthModal({
   const [devCode, setDevCode] = useState<number | null>(null);
   const [shaking, setShaking] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
+  const busyRef = useRef(false);
+
+  const registerTitle =
+    variant === "sofa"
+      ? t("auth.sofa.registerTitle")
+      : variant === "guess"
+        ? t("auth.guess.registerTitle")
+        : t("auth.registerTitle");
+  const lead =
+    variant === "sofa"
+      ? t("auth.sofa.lead")
+      : variant === "guess"
+        ? t("auth.guess.lead")
+        : t("auth.lead");
 
   useEffect(() => {
     if (open && step === "otp") {
-      const t = setTimeout(() => codeRef.current?.focus(), 80);
-      return () => clearTimeout(t);
+      const timeout = setTimeout(() => codeRef.current?.focus(), 80);
+      return () => clearTimeout(timeout);
     }
   }, [open, step]);
 
   if (!open) return null;
 
   const sendOtp = async (data: UserData) => {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, locale }),
       });
       const json = (await res.json()) as {
         status?: string;
@@ -78,26 +92,29 @@ export default function AuthModal({
         json.loginphonefailed ||
           json.errors?.phone ||
           json.errors?.name ||
-          "هناك خطأ ما حاول مرة اخري",
+          t("auth.genericError"),
       );
       setShaking(true);
       setTimeout(() => setShaking(false), 500);
     } catch {
-      setError("هناك خطأ ما حاول مرة اخري");
+      setError(t("auth.genericError"));
     } finally {
+      busyRef.current = false;
       setLoading(false);
     }
   };
 
   const verify = async () => {
-    if (!pending) return;
-    if (!code.trim()) {
-      setError("الكود مطلوب");
+    if (!pending || busyRef.current) return;
+    const nextCode = normalizeOtpCode(code);
+    if (nextCode.length !== 4) {
+      setError(t("auth.codeLength"));
       setShaking(true);
       setTimeout(() => setShaking(false), 500);
       return;
     }
 
+    busyRef.current = true;
     setLoading(true);
     setError("");
     try {
@@ -107,8 +124,9 @@ export default function AuthModal({
         body: JSON.stringify({
           name: pending.name,
           phone: pending.phone,
-          code: normalizeOtpCode(code),
+          code: nextCode,
           brand,
+          locale,
         }),
       });
       const json = (await res.json().catch(() => ({}))) as {
@@ -131,12 +149,13 @@ export default function AuthModal({
         return;
       }
 
-      setError(json.loginphonefailed || json.errors?.code || "كود التحقق غير صحيح");
+      setError(json.loginphonefailed || json.errors?.code || t("auth.codeWrong"));
       setShaking(true);
       setTimeout(() => setShaking(false), 500);
     } catch {
-      setError("هناك خطأ ما حاول مرة اخري");
+      setError(t("auth.genericError"));
     } finally {
+      busyRef.current = false;
       setLoading(false);
     }
   };
@@ -144,27 +163,27 @@ export default function AuthModal({
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <div className={`modal-card auth-card ${shaking ? "shake" : ""}`}>
-        <button type="button" className="auth-close" onClick={onClose} aria-label="إغلاق">
+        <button type="button" className="auth-close" onClick={onClose} aria-label={t("auth.close")}>
           ×
         </button>
-        <p className="modal-eyebrow">بالجوال</p>
+        <p className="modal-eyebrow">{t("auth.eyebrow")}</p>
         <h2 id="auth-title" className="modal-title">
-          {step === "register" ? registerTitle : otpTitle}
+          {step === "register" ? registerTitle : t("auth.otpTitle")}
         </h2>
         <p className="auth-lead">
-          {step === "register" ? lead : `رسالة إلى ${pending?.phone ?? ""}`}
+          {step === "register" ? lead : t("auth.smsTo", { phone: pending?.phone ?? "" })}
         </p>
 
         {step === "register" ? (
           <UserForm
-            submitLabel={loading ? "جاري الإرسال..." : "أرسل الكود"}
+            submitLabel={loading ? t("auth.sending") : t("auth.send")}
             disabled={loading}
             onSubmit={sendOtp}
           />
         ) : (
           <div className="form-panel auth-form">
             <div className="form-field">
-              <label htmlFor="otp-code">كود الرسالة</label>
+              <label htmlFor="otp-code">{t("auth.otpLabel")}</label>
               <input
                 ref={codeRef}
                 id="otp-code"
@@ -192,7 +211,7 @@ export default function AuthModal({
             </div>
             {devCode != null && (
               <p className="auth-dev-code" data-testid="otp-dev-code">
-                كود التجربة: {devCode}
+                {t("auth.devCode", { code: devCode })}
               </p>
             )}
             {error && <span className="field-error">{error}</span>}
@@ -203,7 +222,7 @@ export default function AuthModal({
               disabled={loading}
               onClick={() => void verify()}
             >
-              {loading ? "جاري التحقق..." : "تأكيد"}
+              {loading ? t("auth.verifying") : t("auth.confirm")}
             </button>
             <button
               type="button"
@@ -211,7 +230,7 @@ export default function AuthModal({
               disabled={loading}
               onClick={() => pending && sendOtp(pending)}
             >
-              إعادة إرسال الكود
+              {t("auth.resend")}
             </button>
             <button
               type="button"
@@ -224,7 +243,7 @@ export default function AuthModal({
                 setDevCode(null);
               }}
             >
-              تغيير الرقم
+              {t("auth.changePhone")}
             </button>
           </div>
         )}

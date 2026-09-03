@@ -2,21 +2,25 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import AuthModal, { type AuthUser } from "@/components/AuthModal";
+import LangSwitch from "@/components/LangSwitch";
+import { useLocale } from "@/components/LocaleProvider";
 import SpinWheel, { type SpinWheelHandle } from "@/components/SpinWheel";
 import PrizeModal from "@/components/PrizeModal";
 import Confetti from "@/components/Confetti";
-import { getBrand, isEmptyPrize, type BrandId, type Prize } from "@/lib/prizes";
+import { getBrand, isEmptyPrize, prizeDescription, prizeLabel, type BrandId, type Prize } from "@/lib/prizes";
 import { resumeAudio } from "@/lib/audio";
 import {
   clearPlaySession,
   loadPlaySession,
   savePlaySession,
 } from "@/lib/session";
+import { isDevPhone } from "@/lib/dev";
 
 type Phase = "wheel" | "result";
 
 export default function SpinApp({ brandId }: { brandId: BrandId }) {
   const brand = getBrand(brandId);
+  const { locale, t } = useLocale();
   const wheelRef = useRef<SpinWheelHandle>(null);
   const userRef = useRef<AuthUser | null>(null);
   const readyToSpinRef = useRef(false);
@@ -55,7 +59,7 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
 
   useEffect(() => {
     const saved = loadPlaySession(brandId);
-    if (!saved || saved.alreadySpun) return;
+    if (!saved || (saved.alreadySpun && !isDevPhone(saved.phone))) return;
     userRef.current = saved;
     readyToSpinRef.current = true;
     setUser(saved);
@@ -72,11 +76,17 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
 
   const handleRequestSpin = () => {
     resumeAudio();
-    if (readyToSpinRef.current && userRef.current && !userRef.current.alreadySpun) {
+    const player = userRef.current;
+    if (player && isDevPhone(player.phone)) {
+      readyToSpinRef.current = true;
       setNotice("");
       return true;
     }
-    if (userRef.current?.alreadySpun) return false;
+    if (readyToSpinRef.current && player && !player.alreadySpun) {
+      setNotice("");
+      return true;
+    }
+    if (player?.alreadySpun) return false;
     setNotice("");
     setAuthSession((n) => n + 1);
     setShowAuth(true);
@@ -137,19 +147,24 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
 
       <header className="site-brand">
         <a className="brand-back" href="/">
-          العودة
+          {t("header.back")}
         </a>
         <span className="brand-mark" lang="en" dir="ltr">
           {brand.name}
         </span>
+        <LangSwitch />
       </header>
 
       <section className="page-intro enter-up">
         <h1 className="hero-brand hero-brand-compact" lang="en" dir="ltr">
           {brand.name}
         </h1>
-        <p className="hero-line">{brand.tagline}</p>
-        <p className="hero-support hero-support-compact">{brand.support}</p>
+        <p className="hero-line">
+          {t(brandId === "enala" ? "spin.tagline.enala" : "spin.tagline.place")}
+        </p>
+        <p className="hero-support hero-support-compact">
+          {t(brandId === "enala" ? "spin.support.enala" : "spin.support.place")}
+        </p>
       </section>
 
       {notice && <p className="spin-notice">{notice}</p>}
@@ -175,8 +190,8 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
 
       <PrizeModal
         open={phase === "result" && !!prize}
-        prizeLabel={prize?.label ?? ""}
-        prizeDescription={prize?.description ?? ""}
+        prizeLabel={prize ? prizeLabel(prize, locale) : ""}
+        prizeDescription={prize ? prizeDescription(prize, locale) : ""}
         userName={user?.name ?? ""}
         isEmpty={prize ? isEmptyPrize(prize) : false}
         onClose={resetForNextCustomer}
@@ -184,7 +199,9 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
 
       <Confetti active={showConfetti} />
 
-      <footer className="site-foot">{brand.footer}</footer>
+      <footer className="site-foot">
+        {t(brandId === "enala" ? "spin.footer.enala" : "spin.footer.place")}
+      </footer>
     </main>
   );
 }

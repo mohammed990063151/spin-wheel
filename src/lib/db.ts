@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { ChannelId } from "@/lib/channels";
+import { otpMatches } from "@/lib/otp";
 
 export interface Participant {
   id: number;
@@ -23,7 +24,10 @@ export interface OtpChallenge {
   created_at: number;
 }
 
-const globalForDb = globalThis as unknown as { spinDb?: DatabaseSync };
+const globalForDb = globalThis as unknown as {
+  spinDb?: DatabaseSync;
+  spinOtps?: OtpChallenge[];
+};
 
 function dbFilePath() {
   return path.join(process.cwd(), "data", "spin.db");
@@ -80,6 +84,13 @@ function openDb() {
       created_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_otp_phone ON otp_challenges(phone);
+    CREATE TABLE IF NOT EXISTS sofa_designs (
+      token TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      config TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `);
   migrateParticipants(db);
   return db;
@@ -124,13 +135,17 @@ export function savePrize(
   brand: ChannelId,
   prizeId: string,
   prizeLabel: string,
+  options: { overwrite?: boolean } = {},
 ) {
   const spunAt = new Date().toISOString();
+  const clause = options.overwrite
+    ? "WHERE phone = ? AND brand = ?"
+    : "WHERE phone = ? AND brand = ? AND spun_at IS NULL";
   return getDb()
     .prepare(
       `UPDATE participants
        SET prize_id = ?, prize_label = ?, spun_at = ?
-       WHERE phone = ? AND brand = ? AND spun_at IS NULL`,
+       ${clause}`,
     )
     .run(prizeId, prizeLabel, spunAt, phone, brand);
 }
@@ -141,28 +156,145 @@ export function replaceOtpChallenge(input: {
   codeHash: string;
   expiresAt: number;
 }) {
+  const createdAt = Date.now();
   const db = getDb();
-  db.prepare("DELETE FROM otp_challenges WHERE phone = ?").run(input.phone);
   db.prepare(
     `INSERT INTO otp_challenges (phone, name, code_hash, expires_at, created_at)
      VALUES (?, ?, ?, ?, ?)`,
-  ).run(input.phone, input.name, input.codeHash, input.expiresAt, Date.now());
+  ).run(input.phone, input.name, input.codeHash, input.expiresAt, createdAt);
+  globalForDb.spinOtps = [
+    {
+      id: createdAt,
+      phone: input.phone,
+      name: input.name,
+      code_hash: input.codeHash,
+      expires_at: Number(input.expiresAt),
+      created_at: createdAt,
+    },
+    ...(globalForDb.spinOtps ?? []),
+  ].slice(0, 40);
 }
 
 export function latestOtp(phone: string): OtpChallenge | undefined {
-  const row = getDb()
-    .prepare(
-      `SELECT * FROM otp_challenges WHERE phone = ? ORDER BY id DESC LIMIT 1`,
-    )
-    .get(phone) as OtpChallenge | undefined;
-  if (!row) return undefined;
-  return {
-    ...row,
-    expires_at: Number(row.expires_at),
-    created_at: Number(row.created_at),
+  try {
+    const row = getDb()
+      .prepare(
+        `SELECT * FROM otp_challenges WHERE phone = ? ORDER BY id DESC LIMIT 1`,
+      )
+      .get(phone) as OtpChallenge | undefined;
+    if (!row) return undefined;
+    return {
+      ...row,
+      expires_at: Number(row.expires_at),
+      created_at: Number(row.created_at),
+      code_hash: String(row.code_hash),
+    };
+  } catch (error) {
+    console.error("[otp latest]", error);
+    return (globalForDb.spinOtps ?? []).find((row) => row.phone === phone);
+  }
+}
+
+export function findMatchingOtp(phones: string[], code: string): OtpChallenge | undefined {
+  const unique = [...new Set(phones.filter(Boolean))];
+  const now = Date.now();
+  const freshMs = 15 * 60 * 1000;
+  const isFresh = (row: OtpChallenge) => {
+    const created = Number(row.created_at);
+    if (Number.isFinite(created) && now - created >= 0 && now - created < freshMs) return true;
+    return Number(row.expires_at) > now;
   };
+  const rows: OtpChallenge[] = (globalForDb.spinOtps ?? []).filter(
+    (row) => unique.includes(row.phone) && isFresh(row),
+  );
+
+  for (const phone of unique) {
+    try {
+      const found = getDb()
+        .prepare(
+          `SELECT * FROM otp_challenges WHERE phone = ? ORDER BY id DESC LIMIT 8`,
+        )
+        .all(phone) as OtpChallenge[];
+      for (const row of found) {
+        rows.push({
+          ...row,
+          expires_at: Number(row.expires_at),
+          created_at: Number(row.created_at),
+          code_hash: String(row.code_hash),
+        });
+      }
+    } catch (error) {
+      console.error("[otp lookup]", error);
+    }
+  }
+
+  const seen = new Set<string>();
+  for (const row of rows) {
+    if (seen.has(row.code_hash)) continue;
+    seen.add(row.code_hash);
+    if (!isFresh(row)) continue;
+    if (unique.some((key) => otpMatches(key, code, row.code_hash) || otpMatches(row.phone, code, row.code_hash))) {
+      return row;
+    }
+  }
+  return undefined;
 }
 
 export function clearOtp(phone: string) {
   getDb().prepare("DELETE FROM otp_challenges WHERE phone = ?").run(phone);
+  globalForDb.spinOtps = (globalForDb.spinOtps ?? []).filter((row) => row.phone !== phone);
+}
+
+export interface SavedSofaDesign {
+  token: string;
+  name: string;
+  configJson: string;
+  created_at: string;
+}
+
+export function saveSofaDesign(input: {
+  token: string;
+  name: string;
+  phone: string;
+  configJson: string;
+}) {
+  getDb().exec(`
+    CREATE TABLE IF NOT EXISTS sofa_designs (
+      token TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      config TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `);
+  getDb()
+    .prepare(
+      `INSERT INTO sofa_designs (token, name, phone, config, created_at)
+       VALUES (?, ?, ?, ?, ?)`,
+    )
+    .run(input.token, input.name, input.phone, input.configJson, new Date().toISOString());
+}
+
+export function findSofaDesign(token: string): SavedSofaDesign | undefined {
+  getDb().exec(`
+    CREATE TABLE IF NOT EXISTS sofa_designs (
+      token TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      config TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+  `);
+  const row = getDb()
+    .prepare("SELECT token, name, config, created_at FROM sofa_designs WHERE token = ?")
+    .get(token) as
+    | { token: string; name: string; config: string; created_at: string }
+    | undefined;
+  if (!row) return undefined;
+  return {
+    token: row.token,
+    name: row.name,
+    configJson: row.config,
+    created_at: row.created_at,
+  };
 }
