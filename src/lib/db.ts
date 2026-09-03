@@ -64,7 +64,11 @@ function openDb() {
   const file = dbFilePath();
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const db = new DatabaseSync(file);
-  db.exec("PRAGMA journal_mode = WAL");
+  try {
+    db.exec(process.env.VERCEL ? "PRAGMA journal_mode = DELETE" : "PRAGMA journal_mode = WAL");
+  } catch (error) {
+    console.error("[db journal]", error);
+  }
   db.exec("PRAGMA foreign_keys = ON");
   db.exec(`
     CREATE TABLE IF NOT EXISTS participants (

@@ -5,9 +5,10 @@ import { affLookupCustomer, affLookupGuess, affRegisterCustomer, clientMeta } fr
 import { isChannelId } from "@/lib/channels";
 import { isDevPhone } from "@/lib/dev";
 import { parseLocale, t } from "@/lib/i18n";
-import { clearOtpCookieHeader, matchOtpCookie, readOtpCookie } from "@/lib/otp-cookie";
+import { clearOtpCookie, matchOtpCookie, readOtpCookie } from "@/lib/otp-cookie";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let locale = parseLocale(undefined);
@@ -68,7 +69,12 @@ async function verifyOtp(request: Request) {
     });
   }
 
-  let participant = findParticipant(phone, brand);
+  let participant;
+  try {
+    participant = findParticipant(phone, brand);
+  } catch (error) {
+    console.error("[verify-otp] find", error);
+  }
   const isNew = !participant;
   try {
     if (!participant) {
@@ -76,6 +82,18 @@ async function verifyOtp(request: Request) {
     }
   } catch (error) {
     console.error("[verify-otp] participant", error);
+    participant = {
+      id: 0,
+      name: challenge.name || name,
+      phone,
+      brand,
+      prize_id: null,
+      prize_label: null,
+      created_at: new Date().toISOString(),
+      spun_at: null,
+    };
+  }
+  if (!participant) {
     participant = {
       id: 0,
       name: challenge.name || name,
@@ -136,6 +154,6 @@ async function verifyOtp(request: Request) {
     phone: participant.phone,
     prize_label: affData?.prize_label || participant.prize_label,
   });
-  response.headers.append("Set-Cookie", clearOtpCookieHeader());
+  clearOtpCookie(response);
   return response;
 }

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { NextResponse } from "next/server";
 import { otpMatches } from "@/lib/otp";
 import { normalizePhone, phoneLookupKeys } from "@/lib/phone";
-import type { OtpChallenge } from "@/lib/db";
 
 export const OTP_COOKIE = "spin-otp";
 
@@ -13,12 +13,25 @@ export type OtpCookiePayload = {
   created: number;
 };
 
+export type CookieOtpChallenge = {
+  id: number;
+  phone: string;
+  name: string;
+  code_hash: string;
+  expires_at: number;
+  created_at: number;
+};
+
 function secret() {
   return process.env.OTP_SECRET || "sakoon-spin-otp";
 }
 
 function sign(body: string) {
   return createHmac("sha256", secret()).update(body).digest("base64url");
+}
+
+function cookieSecure() {
+  return Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
 }
 
 export function encodeOtpCookie(payload: OtpCookiePayload) {
@@ -55,28 +68,35 @@ export function readOtpCookie(request: Request): OtpCookiePayload | null {
   return decodeOtpCookie(match?.[1]);
 }
 
-export function otpCookieHeader(value: string, maxAgeSec: number) {
-  const secure = Boolean(process.env.VERCEL) || process.env.NODE_ENV === "production";
-  const parts = [
-    `${OTP_COOKIE}=${value}`,
-    "Path=/",
-    `Max-Age=${Math.max(0, maxAgeSec)}`,
-    "HttpOnly",
-    "SameSite=Lax",
-  ];
-  if (secure) parts.push("Secure");
-  return parts.join("; ");
+export function applyOtpCookie(response: NextResponse, value: string, maxAgeSec: number) {
+  response.cookies.set({
+    name: OTP_COOKIE,
+    value,
+    path: "/",
+    maxAge: Math.max(0, maxAgeSec),
+    httpOnly: true,
+    sameSite: "lax",
+    secure: cookieSecure(),
+  });
 }
 
-export function clearOtpCookieHeader() {
-  return otpCookieHeader("", 0);
+export function clearOtpCookie(response: NextResponse) {
+  response.cookies.set({
+    name: OTP_COOKIE,
+    value: "",
+    path: "/",
+    maxAge: 0,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: cookieSecure(),
+  });
 }
 
 export function matchOtpCookie(
   payload: OtpCookiePayload | null,
   phones: string[],
   code: string,
-): OtpChallenge | undefined {
+): CookieOtpChallenge | undefined {
   if (!payload) return undefined;
   const stored = normalizePhone(payload.phone);
   const samePhone = phones.some((phone) => {
