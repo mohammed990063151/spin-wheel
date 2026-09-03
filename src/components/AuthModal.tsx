@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import UserForm, { type UserData } from "@/components/UserForm";
 import type { ChannelId } from "@/lib/channels";
+import { normalizeOtpCode } from "@/lib/phone";
 
 export interface AuthUser extends UserData {
   alreadySpun: boolean;
@@ -106,11 +107,11 @@ export default function AuthModal({
         body: JSON.stringify({
           name: pending.name,
           phone: pending.phone,
-          code: code.trim(),
+          code: normalizeOtpCode(code),
           brand,
         }),
       });
-      const json = (await res.json()) as {
+      const json = (await res.json().catch(() => ({}))) as {
         status?: string;
         name?: string;
         phone?: string;
@@ -177,7 +178,7 @@ export default function AuthModal({
                 className="otp-input"
                 value={code}
                 onChange={(e) => {
-                  setCode(e.target.value.replace(/\D/g, "").slice(0, 4));
+                  setCode(normalizeOtpCode(e.target.value));
                   if (error) setError("");
                 }}
                 onKeyDown={(e) => {

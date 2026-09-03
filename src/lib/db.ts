@@ -105,11 +105,17 @@ export function createParticipant(
   brand: ChannelId,
 ): Participant {
   const createdAt = new Date().toISOString();
-  getDb()
-    .prepare(
-      "INSERT INTO participants (name, phone, brand, created_at) VALUES (?, ?, ?, ?)",
-    )
-    .run(name, phone, brand, createdAt);
+  try {
+    getDb()
+      .prepare(
+        "INSERT INTO participants (name, phone, brand, created_at) VALUES (?, ?, ?, ?)",
+      )
+      .run(name, phone, brand, createdAt);
+  } catch {
+    const existing = findParticipant(phone, brand);
+    if (existing) return existing;
+    throw new Error("تعذر حفظ المشارك");
+  }
   return findParticipant(phone, brand)!;
 }
 
@@ -144,11 +150,17 @@ export function replaceOtpChallenge(input: {
 }
 
 export function latestOtp(phone: string): OtpChallenge | undefined {
-  return getDb()
+  const row = getDb()
     .prepare(
       `SELECT * FROM otp_challenges WHERE phone = ? ORDER BY id DESC LIMIT 1`,
     )
     .get(phone) as OtpChallenge | undefined;
+  if (!row) return undefined;
+  return {
+    ...row,
+    expires_at: Number(row.expires_at),
+    created_at: Number(row.created_at),
+  };
 }
 
 export function clearOtp(phone: string) {

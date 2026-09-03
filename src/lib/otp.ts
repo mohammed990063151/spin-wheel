@@ -1,4 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto";
+import { normalizeOtpCode } from "@/lib/phone";
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 const RESEND_GAP_MS = 60 * 1000;
@@ -13,13 +14,13 @@ export function generateOtp() {
 
 export function hashOtp(phone: string, code: string | number) {
   return createHash("sha256")
-    .update(`${phone}:${code}:${secret()}`)
+    .update(`${phone}:${String(code)}:${secret()}`)
     .digest("hex");
 }
 
 export function otpMatches(phone: string, code: string, storedHash: string) {
-  const next = Buffer.from(hashOtp(phone, code));
-  const prev = Buffer.from(storedHash);
+  const next = Buffer.from(hashOtp(phone, normalizeOtpCode(code)));
+  const prev = Buffer.from(String(storedHash));
   if (next.length !== prev.length) return false;
   return timingSafeEqual(next, prev);
 }
@@ -29,10 +30,10 @@ export function otpExpiry() {
 }
 
 export function canResend(lastCreatedAt: number) {
-  return Date.now() - lastCreatedAt >= RESEND_GAP_MS;
+  return Date.now() - Number(lastCreatedAt) >= RESEND_GAP_MS;
 }
 
 export function resendWaitSeconds(lastCreatedAt: number) {
-  const wait = Math.ceil((RESEND_GAP_MS - (Date.now() - lastCreatedAt)) / 1000);
+  const wait = Math.ceil((RESEND_GAP_MS - (Date.now() - Number(lastCreatedAt))) / 1000);
   return Math.max(0, wait);
 }

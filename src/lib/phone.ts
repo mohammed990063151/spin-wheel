@@ -10,3 +10,13 @@ export function isValidPhone(phone: string): boolean {
   const digits = normalizePhone(phone);
   return digits.length >= 9 && digits.length <= 15;
 }
+
+export function normalizeOtpCode(input: string | number | undefined): string {
+  const arabic = "٠١٢٣٤٥٦٧٨٩";
+  const eastern = "۰۱۲۳۴۵۶۷۸۹";
+  return String(input ?? "")
+    .replace(/[٠-٩]/g, (digit) => String(arabic.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String(eastern.indexOf(digit)))
+    .replace(/\D/g, "")
+    .slice(0, 4);
+}
