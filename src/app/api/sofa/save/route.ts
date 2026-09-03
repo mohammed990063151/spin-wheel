@@ -1,9 +1,9 @@
-import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createParticipant, findParticipant, saveSofaDesign } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affSaveSofa, clientMeta } from "@/lib/aff";
 import { parseLocale, t } from "@/lib/i18n";
+import { encodeSofaShare } from "@/lib/sofa-share";
 import {
   estimateSofaPrice,
   getFabricColor,
@@ -11,6 +11,9 @@ import {
   sofaStyleTag,
   sofaSummary,
 } from "@/lib/sofa";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: { name?: string; phone?: string; config?: unknown; locale?: string };
@@ -28,11 +31,17 @@ export async function POST(request: Request) {
   }
 
   const config = body.config;
-  if (!findParticipant(phone, "sofa")) {
-    createParticipant(name, phone, "sofa");
+  try {
+    if (!findParticipant(phone, "sofa")) {
+      createParticipant(name, phone, "sofa");
+    }
+  } catch (error) {
+    console.error("[sofa-save] participant", error);
   }
 
-  const token = randomBytes(12).toString("hex");
+  // The token itself carries the whole design, so the share link works without
+  // a database (Vercel's filesystem is ephemeral and would 404 otherwise).
+  const token = encodeSofaShare({ name, config });
   try {
     saveSofaDesign({
       token,
@@ -42,7 +51,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("[sofa-save] store", error);
-    return NextResponse.json({ ok: false, message: t(locale, "api.saveFailed") }, { status: 500 });
   }
 
   const color = getFabricColor(config.fabricColor);
