@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { createParticipant, findParticipant, savePrize } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affGuessComplete, clientMeta } from "@/lib/aff";
 import { isDevPhone } from "@/lib/dev";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: {
@@ -31,21 +33,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  let participant = findParticipant(phone, "guess");
-  if (!participant) {
-    participant = createParticipant(name, phone, "guess");
-  }
-
-  if (participant.spun_at && !isDevPhone(phone)) {
-    return NextResponse.json({
-      ok: false,
-      already_spun: true,
-      prize_label: participant.prize_label,
-    });
-  }
-
-  savePrize(phone, "guess", prizeId, prizeLabel, { overwrite: isDevPhone(phone) });
-  await affGuessComplete({
+  // aff decides whether this phone already played and records the result.
+  const aff = await affGuessComplete({
     name,
     phone,
     score: Number(body.score ?? 0),
@@ -58,6 +47,14 @@ export async function POST(request: Request) {
     rounds: body.rounds ?? [],
     ...clientMeta(request),
   });
+
+  if (aff?.already_spun && !isDevPhone(phone)) {
+    return NextResponse.json({
+      ok: false,
+      already_spun: true,
+      prize_label: aff.prize_label ?? null,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

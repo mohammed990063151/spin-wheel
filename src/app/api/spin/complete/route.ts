@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { findParticipant, savePrize } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affCompleteSpin, clientMeta } from "@/lib/aff";
 import { isBrandId } from "@/lib/prizes";
 import { isDevPhone } from "@/lib/dev";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: {
@@ -33,14 +35,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const participant = findParticipant(phone, brand);
-  if (!participant) {
-    return NextResponse.json({ ok: false, reason: "not_found" }, { status: 404 });
-  }
-
-  const meta = clientMeta(request);
-  const affPayload = {
-    name: name || participant.name,
+  // aff is the single source of truth: it decides whether the phone already
+  // spun and records the prize.
+  const aff = await affCompleteSpin({
+    name: name || undefined,
     phone,
     source: brand,
     prize_id: prizeId,
@@ -48,25 +46,16 @@ export async function POST(request: Request) {
     prize_description: prizeDescription || undefined,
     prize_empty: prizeEmpty,
     spun_at: new Date().toISOString(),
-    ...meta,
-  };
+    ...clientMeta(request),
+  });
 
-  if (participant.spun_at && !isDevPhone(phone)) {
-    await affCompleteSpin({
-      ...affPayload,
-      prize_id: participant.prize_id || prizeId,
-      prize_label: participant.prize_label || prizeLabel,
-      spun_at: participant.spun_at,
-    });
+  if (aff?.already_spun && !isDevPhone(phone)) {
     return NextResponse.json({
       ok: false,
       already_spun: true,
-      prize_label: participant.prize_label,
+      prize_label: aff.prize_label ?? null,
     });
   }
-
-  savePrize(phone, brand, prizeId, prizeLabel, { overwrite: isDevPhone(phone) });
-  await affCompleteSpin(affPayload);
 
   return NextResponse.json({ ok: true });
 }

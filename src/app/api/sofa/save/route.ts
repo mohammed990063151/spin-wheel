@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createParticipant, findParticipant, saveSofaDesign } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affSaveSofa, clientMeta } from "@/lib/aff";
 import { parseLocale, t } from "@/lib/i18n";
@@ -31,27 +30,10 @@ export async function POST(request: Request) {
   }
 
   const config = body.config;
-  try {
-    if (!findParticipant(phone, "sofa")) {
-      createParticipant(name, phone, "sofa");
-    }
-  } catch (error) {
-    console.error("[sofa-save] participant", error);
-  }
 
-  // The token itself carries the whole design, so the share link works without
-  // a database (Vercel's filesystem is ephemeral and would 404 otherwise).
+  // The token carries the whole design, so the share link works without any
+  // local database — aff keeps the record for the Place team.
   const token = encodeSofaShare({ name, config });
-  try {
-    saveSofaDesign({
-      token,
-      name,
-      phone,
-      configJson: JSON.stringify(config),
-    });
-  } catch (error) {
-    console.error("[sofa-save] store", error);
-  }
 
   const color = getFabricColor(config.fabricColor);
   try {

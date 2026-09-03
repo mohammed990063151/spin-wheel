@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import { findParticipant } from "@/lib/db";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { isBrandId } from "@/lib/prizes";
+import { affLookupCustomer, affLookupGuess } from "@/lib/aff";
+import { isChannelId } from "@/lib/channels";
+import { isDevPhone } from "@/lib/dev";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: { phone?: string; brand?: string };
@@ -12,18 +17,28 @@ export async function POST(request: Request) {
   }
 
   const phone = normalizePhone(body.phone ?? "");
-  const brand = isBrandId(body.brand) ? body.brand : "place";
+  const brand = isChannelId(body.brand) ? body.brand : "place";
   if (!isValidPhone(phone)) return NextResponse.json({ exists: false });
 
-  const participant = findParticipant(phone, brand);
-  if (!participant) return NextResponse.json({ exists: false });
+  let affData = null;
+  try {
+    if (brand === "guess") {
+      affData = await affLookupGuess(phone);
+    } else if (isBrandId(brand)) {
+      affData = await affLookupCustomer(phone, brand);
+    }
+  } catch (error) {
+    console.error("[auth-status] aff", error);
+  }
+
+  if (!affData?.exists) return NextResponse.json({ exists: false });
 
   return NextResponse.json({
     exists: true,
-    already_spun: Boolean(participant.spun_at),
-    name: participant.name,
-    phone: participant.phone,
-    prize_label: participant.prize_label,
+    already_spun: isDevPhone(phone) ? false : Boolean(affData.already_spun),
+    name: affData.customer?.name ?? "",
+    phone,
+    prize_label: affData.prize_label ?? null,
     brand,
   });
 }

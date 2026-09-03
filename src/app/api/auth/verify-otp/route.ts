@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { clearOtp, createParticipant, findMatchingOtp, findParticipant } from "@/lib/db";
 import { isValidPhone, normalizeOtpCode, normalizePhone, phoneLookupKeys } from "@/lib/phone";
 import { affLookupCustomer, affLookupGuess, affRegisterCustomer, clientMeta } from "@/lib/aff";
 import { isChannelId } from "@/lib/channels";
@@ -11,7 +10,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  let locale = parseLocale(undefined);
+  const locale = parseLocale(undefined);
   try {
     return await verifyOtp(request);
   } catch (error) {
@@ -54,14 +53,7 @@ async function verifyOtp(request: Request) {
   }
 
   const keys = phoneLookupKeys(rawPhone);
-  let challenge = matchOtpCookie(readOtpCookie(request), keys, code);
-  if (!challenge) {
-    try {
-      challenge = findMatchingOtp(keys, code);
-    } catch (error) {
-      console.error("[verify-otp] lookup", error);
-    }
-  }
+  const challenge = matchOtpCookie(readOtpCookie(request), keys, code);
   if (!challenge) {
     return NextResponse.json({
       loginphonefailed: t(locale, "api.codeMismatch"),
@@ -69,90 +61,37 @@ async function verifyOtp(request: Request) {
     });
   }
 
-  let participant;
-  try {
-    participant = findParticipant(phone, brand);
-  } catch (error) {
-    console.error("[verify-otp] find", error);
-  }
-  const isNew = !participant;
-  try {
-    if (!participant) {
-      participant = createParticipant(challenge.name || name, phone, brand);
-    }
-  } catch (error) {
-    console.error("[verify-otp] participant", error);
-    participant = {
-      id: 0,
-      name: challenge.name || name,
-      phone,
-      brand,
-      prize_id: null,
-      prize_label: null,
-      created_at: new Date().toISOString(),
-      spun_at: null,
-    };
-  }
-  if (!participant) {
-    participant = {
-      id: 0,
-      name: challenge.name || name,
-      phone,
-      brand,
-      prize_id: null,
-      prize_label: null,
-      created_at: new Date().toISOString(),
-      spun_at: null,
-    };
-  }
-
-  for (const key of keys) {
-    try {
-      clearOtp(key);
-    } catch (error) {
-      console.error("[verify-otp] clear", error);
-    }
-  }
-
+  // Everything is stored in aff; there is no local database.
+  const resolvedName = challenge.name || name;
   const meta = clientMeta(request);
   const spinBrand = brand === "enala" || brand === "place" ? brand : null;
-  let aff = null;
+  let affData = null;
   try {
-    aff = spinBrand
-      ? await affRegisterCustomer({
-          name: participant.name,
-          phone: participant.phone,
+    if (spinBrand) {
+      affData =
+        (await affRegisterCustomer({
+          name: resolvedName,
+          phone,
           source: spinBrand,
           ...meta,
-        })
-      : brand === "guess"
-        ? await affLookupGuess(phone)
-        : null;
+        })) || (await affLookupCustomer(phone, spinBrand));
+    } else if (brand === "guess") {
+      affData = await affLookupGuess(phone);
+    }
   } catch (error) {
     console.error("[verify-otp] aff", error);
   }
 
-  let affData = aff;
-  try {
-    if (spinBrand && !affData) {
-      affData = await affLookupCustomer(phone, spinBrand);
-    }
-  } catch (error) {
-    console.error("[verify-otp] aff lookup", error);
-  }
-
   const alreadySpun =
-    brand === "sofa" || isDevPhone(phone)
-      ? false
-      : Boolean(participant.spun_at || affData?.already_spun);
+    brand === "sofa" || isDevPhone(phone) ? false : Boolean(affData?.already_spun);
 
   const response = NextResponse.json({
     status: "true",
-    is_new: isNew && !affData?.exists && affData?.is_new !== false,
+    is_new: affData ? Boolean(affData.is_new ?? !affData.exists) : true,
     already_spun: alreadySpun,
-    name: affData?.customer?.name || participant.name,
-    phone: participant.phone,
-    prize_label: affData?.prize_label || participant.prize_label,
+    name: affData?.customer?.name || resolvedName,
+    phone,
+    prize_label: affData?.prize_label ?? null,
   });
   clearOtpCookie(response);
   return response;
