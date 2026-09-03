@@ -6,6 +6,11 @@ import {
   otpExpiry,
   resendWaitSeconds,
 } from "@/lib/otp";
+import {
+  encodeOtpCookie,
+  otpCookieHeader,
+  readOtpCookie,
+} from "@/lib/otp-cookie";
 import { isValidPhone, normalizeOtpCode, normalizePhone } from "@/lib/phone";
 import { latestOtp, replaceOtpChallenge } from "@/lib/db";
 import { isSmsDebug, otpMessage, sendSms } from "@/lib/sms";
@@ -34,11 +39,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ errors });
   }
 
-  const existing = latestOtp(phone);
-  if (existing && !canResend(existing.created_at)) {
+  const cookieChallenge = readOtpCookie(request);
+  let lastCreated = cookieChallenge?.phone === phone ? cookieChallenge.created : 0;
+  try {
+    lastCreated = latestOtp(phone)?.created_at || lastCreated;
+  } catch (error) {
+    console.error("[send-otp] latest", error);
+  }
+  if (lastCreated && !canResend(lastCreated)) {
     return NextResponse.json({
       loginphonefailed: t(locale, "api.resendWait", {
-        n: resendWaitSeconds(existing.created_at),
+        n: resendWaitSeconds(lastCreated),
       }),
     });
   }
@@ -49,23 +60,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ loginphonefailed: t(locale, "api.smsFailed") });
   }
 
-  try {
-    replaceOtpChallenge({
-      phone,
-      name,
-      codeHash: hashOtp(phone, normalizeOtpCode(code)),
-      expiresAt: otpExpiry(),
-    });
-  } catch (error) {
-    console.error("[send-otp] store", error);
-    return NextResponse.json({
-      loginphonefailed: t(locale, "api.otpStoreFailed"),
-    });
-  }
+  const expiresAt = otpExpiry();
+  const created = Date.now();
+  const codeHash = hashOtp(phone, normalizeOtpCode(code));
+  replaceOtpChallenge({
+    phone,
+    name,
+    codeHash,
+    expiresAt,
+  });
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     status: "true",
     name,
     ...(isSmsDebug() ? { code_for_test: code } : {}),
   });
+  response.headers.append(
+    "Set-Cookie",
+    otpCookieHeader(
+      encodeOtpCookie({
+        phone,
+        name,
+        hash: codeHash,
+        exp: expiresAt,
+        created,
+      }),
+      Math.ceil((expiresAt - created) / 1000) + 60,
+    ),
+  );
+  return response;
 }

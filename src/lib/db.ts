@@ -30,6 +30,9 @@ const globalForDb = globalThis as unknown as {
 };
 
 function dbFilePath() {
+  if (process.env.VERCEL) {
+    return path.join("/tmp", "spin.db");
+  }
   return path.join(process.cwd(), "data", "spin.db");
 }
 
@@ -157,11 +160,6 @@ export function replaceOtpChallenge(input: {
   expiresAt: number;
 }) {
   const createdAt = Date.now();
-  const db = getDb();
-  db.prepare(
-    `INSERT INTO otp_challenges (phone, name, code_hash, expires_at, created_at)
-     VALUES (?, ?, ?, ?, ?)`,
-  ).run(input.phone, input.name, input.codeHash, input.expiresAt, createdAt);
   globalForDb.spinOtps = [
     {
       id: createdAt,
@@ -173,6 +171,16 @@ export function replaceOtpChallenge(input: {
     },
     ...(globalForDb.spinOtps ?? []),
   ].slice(0, 40);
+  try {
+    getDb()
+      .prepare(
+        `INSERT INTO otp_challenges (phone, name, code_hash, expires_at, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+      )
+      .run(input.phone, input.name, input.codeHash, input.expiresAt, createdAt);
+  } catch (error) {
+    console.error("[otp store sqlite]", error);
+  }
 }
 
 export function latestOtp(phone: string): OtpChallenge | undefined {

@@ -70,6 +70,7 @@ export default function AuthModal({
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ ...data, locale }),
       });
       const json = (await res.json()) as {
@@ -121,6 +122,7 @@ export default function AuthModal({
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: pending.name,
           phone: pending.phone,

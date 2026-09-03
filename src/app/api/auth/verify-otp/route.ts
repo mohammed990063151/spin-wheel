@@ -5,6 +5,7 @@ import { affLookupCustomer, affLookupGuess, affRegisterCustomer, clientMeta } fr
 import { isChannelId } from "@/lib/channels";
 import { isDevPhone } from "@/lib/dev";
 import { parseLocale, t } from "@/lib/i18n";
+import { clearOtpCookieHeader, matchOtpCookie, readOtpCookie } from "@/lib/otp-cookie";
 
 export const runtime = "nodejs";
 
@@ -52,7 +53,14 @@ async function verifyOtp(request: Request) {
   }
 
   const keys = phoneLookupKeys(rawPhone);
-  const challenge = findMatchingOtp(keys, code);
+  let challenge = matchOtpCookie(readOtpCookie(request), keys, code);
+  if (!challenge) {
+    try {
+      challenge = findMatchingOtp(keys, code);
+    } catch (error) {
+      console.error("[verify-otp] lookup", error);
+    }
+  }
   if (!challenge) {
     return NextResponse.json({
       loginphonefailed: t(locale, "api.codeMismatch"),
@@ -120,7 +128,7 @@ async function verifyOtp(request: Request) {
       ? false
       : Boolean(participant.spun_at || affData?.already_spun);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     status: "true",
     is_new: isNew && !affData?.exists && affData?.is_new !== false,
     already_spun: alreadySpun,
@@ -128,4 +136,6 @@ async function verifyOtp(request: Request) {
     phone: participant.phone,
     prize_label: affData?.prize_label || participant.prize_label,
   });
+  response.headers.append("Set-Cookie", clearOtpCookieHeader());
+  return response;
 }
