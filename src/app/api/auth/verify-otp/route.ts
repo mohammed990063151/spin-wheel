@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { clearOtp, createParticipant, findParticipant, latestOtp } from "@/lib/db";
 import { otpMatches } from "@/lib/otp";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { affLookupCustomer, affRegisterCustomer, clientMeta } from "@/lib/aff";
-import { isBrandId } from "@/lib/prizes";
+import { affLookupCustomer, affLookupGuess, affRegisterCustomer, clientMeta } from "@/lib/aff";
+import { isChannelId } from "@/lib/channels";
 
 export async function POST(request: Request) {
   let body: { name?: string; phone?: string; code?: string; brand?: string };
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const name = (body.name ?? "").trim();
   const phone = normalizePhone(body.phone ?? "");
   const code = (body.code ?? "").trim();
-  const brand = isBrandId(body.brand) ? body.brand : "place";
+  const brand = isChannelId(body.brand) ? body.brand : "place";
   const errors: { name?: string; code?: string } = {};
 
   if (!name) errors.name = "الاسم مطلوب";
@@ -62,14 +62,24 @@ export async function POST(request: Request) {
   }
 
   const meta = clientMeta(request);
-  const aff = await affRegisterCustomer({
-    name: participant.name,
-    phone: participant.phone,
-    source: brand,
-    ...meta,
-  });
-  const affData = aff ?? (await affLookupCustomer(phone, brand));
-  const alreadySpun = Boolean(participant.spun_at || affData?.already_spun);
+  const spinBrand = brand === "enala" || brand === "place" ? brand : null;
+  const aff = spinBrand
+    ? await affRegisterCustomer({
+        name: participant.name,
+        phone: participant.phone,
+        source: spinBrand,
+        ...meta,
+      })
+    : brand === "guess"
+      ? await affLookupGuess(phone)
+      : null;
+  const affData = spinBrand
+    ? aff ?? (await affLookupCustomer(phone, spinBrand))
+    : aff;
+  const alreadySpun =
+    brand === "sofa"
+      ? false
+      : Boolean(participant.spun_at || affData?.already_spun);
 
   return NextResponse.json({
     status: "true",

@@ -1,21 +1,21 @@
 import type { AuthUser } from "@/components/AuthModal";
-import type { BrandId } from "@/lib/prizes";
+import type { ChannelId } from "@/lib/channels";
 
-function keyFor(brand: BrandId) {
-  return `spin-play-session-${brand}`;
+function keyFor(channel: ChannelId) {
+  return `spin-play-session-${channel}`;
 }
 
-export function savePlaySession(brand: BrandId, user: AuthUser) {
+export function savePlaySession(channel: ChannelId, user: AuthUser) {
   try {
-    sessionStorage.setItem(keyFor(brand), JSON.stringify(user));
+    sessionStorage.setItem(keyFor(channel), JSON.stringify(user));
   } catch {
     /* ignore quota / private mode */
   }
 }
 
-export function loadPlaySession(brand: BrandId): AuthUser | null {
+export function loadPlaySession(channel: ChannelId): AuthUser | null {
   try {
-    const raw = sessionStorage.getItem(keyFor(brand));
+    const raw = sessionStorage.getItem(keyFor(channel));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as AuthUser;
     if (!parsed?.phone || !parsed?.name) return null;
@@ -25,9 +25,9 @@ export function loadPlaySession(brand: BrandId): AuthUser | null {
   }
 }
 
-export function clearPlaySession(brand: BrandId) {
+export function clearPlaySession(channel: ChannelId) {
   try {
-    sessionStorage.removeItem(keyFor(brand));
+    sessionStorage.removeItem(keyFor(channel));
   } catch {
     /* ignore */
   }

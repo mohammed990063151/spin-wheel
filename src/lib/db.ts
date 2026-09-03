@@ -1,13 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import type { BrandId } from "@/lib/prizes";
+import type { ChannelId } from "@/lib/channels";
 
 export interface Participant {
   id: number;
   name: string;
   phone: string;
-  brand: BrandId;
+  brand: ChannelId;
   prize_id: string | null;
   prize_label: string | null;
   created_at: string;
@@ -92,7 +92,7 @@ export function getDb() {
   return globalForDb.spinDb;
 }
 
-export function findParticipant(phone: string, brand: BrandId): Participant | undefined {
+export function findParticipant(phone: string, brand: ChannelId): Participant | undefined {
   const row = getDb()
     .prepare("SELECT * FROM participants WHERE phone = ? AND brand = ?")
     .get(phone, brand) as Participant | undefined;
@@ -102,7 +102,7 @@ export function findParticipant(phone: string, brand: BrandId): Participant | un
 export function createParticipant(
   name: string,
   phone: string,
-  brand: BrandId,
+  brand: ChannelId,
 ): Participant {
   const createdAt = new Date().toISOString();
   getDb()
@@ -115,7 +115,7 @@ export function createParticipant(
 
 export function savePrize(
   phone: string,
-  brand: BrandId,
+  brand: ChannelId,
   prizeId: string,
   prizeLabel: string,
 ) {

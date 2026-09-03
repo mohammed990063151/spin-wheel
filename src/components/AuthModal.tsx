@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import UserForm, { type UserData } from "@/components/UserForm";
+import type { ChannelId } from "@/lib/channels";
 
 export interface AuthUser extends UserData {
   alreadySpun: boolean;
@@ -10,14 +11,25 @@ export interface AuthUser extends UserData {
 
 interface AuthModalProps {
   open: boolean;
-  brand: "place" | "enala";
+  brand: ChannelId;
   onClose: () => void;
   onVerified: (user: AuthUser) => void;
+  registerTitle?: string;
+  otpTitle?: string;
+  lead?: string;
 }
 
 type Step = "register" | "otp";
 
-export default function AuthModal({ open, brand, onClose, onVerified }: AuthModalProps) {
+export default function AuthModal({
+  open,
+  brand,
+  onClose,
+  onVerified,
+  registerTitle = "سجّل ثم لف",
+  otpTitle = "أدخل الكود",
+  lead = "نرسل كود تأكيد برسالة",
+}: AuthModalProps) {
   const [step, setStep] = useState<Step>("register");
   const [pending, setPending] = useState<UserData | null>(null);
   const [code, setCode] = useState("");
@@ -136,12 +148,10 @@ export default function AuthModal({ open, brand, onClose, onVerified }: AuthModa
         </button>
         <p className="modal-eyebrow">بالجوال</p>
         <h2 id="auth-title" className="modal-title">
-          {step === "register" ? "سجّل ثم لف" : "أدخل الكود"}
+          {step === "register" ? registerTitle : otpTitle}
         </h2>
         <p className="auth-lead">
-          {step === "register"
-            ? "نرسل كود تأكيد برسالة"
-            : `رسالة إلى ${pending?.phone ?? ""}`}
+          {step === "register" ? lead : `رسالة إلى ${pending?.phone ?? ""}`}
         </p>
 
         {step === "register" ? (

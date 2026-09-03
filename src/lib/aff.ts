@@ -104,3 +104,51 @@ export async function affCompleteSpin(input: {
     body: JSON.stringify(input),
   });
 }
+
+export async function affSaveSofa(input: {
+  name: string;
+  phone: string;
+  seats: number;
+  arm_style: string;
+  leg_style: string;
+  fabric_color: string;
+  fabric_color_hex: string;
+  fabric_type: string;
+  pillows: string;
+  estimated_price: number;
+  summary: string;
+  style_tag: string;
+  config: unknown;
+  ip_address?: string;
+  user_agent?: string;
+}) {
+  return affFetch("/place/sofa-designs", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function affLookupGuess(phone: string) {
+  const query = new URLSearchParams({ phone }).toString();
+  return affFetch(`/place/guess/lookup?${query}`);
+}
+
+export async function affGuessComplete(input: {
+  name: string;
+  phone: string;
+  score: number;
+  max_score: number;
+  style_tag?: string;
+  prize_id: string;
+  prize_label: string;
+  prize_description?: string;
+  prize_empty?: boolean;
+  rounds: unknown;
+  ip_address?: string;
+  user_agent?: string;
+}) {
+  return affFetch("/place/guess/complete", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
