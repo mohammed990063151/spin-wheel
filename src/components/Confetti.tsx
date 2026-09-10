@@ -15,7 +15,7 @@ interface Particle {
   life: number;
 }
 
-const COLORS = ["#C4A35A", "#F5E6C8", "#0F5C4C", "#8B3A2F", "#D4B56E", "#fff"];
+const COLORS = ["#c3a786", "#f7f6f2", "#deddd3", "#b8956f", "#e8d4b8", "#ffffff"];
 
 interface ConfettiProps {
   active: boolean;

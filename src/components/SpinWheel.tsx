@@ -182,18 +182,18 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
           <svg width="36" height="48" viewBox="0 0 36 48" aria-hidden>
             <defs>
               <linearGradient id="ptrGold" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#F0D78C" />
-                <stop offset="50%" stopColor="#C4A35A" />
-                <stop offset="100%" stopColor="#8A6E2F" />
+                <stop offset="0%" stopColor="#e8d4b8" />
+                <stop offset="50%" stopColor="#c3a786" />
+                <stop offset="100%" stopColor="#9a7a55" />
               </linearGradient>
             </defs>
             <path
               d="M18 46 C18 46 2 28 2 16 C2 7.7 9.2 1 18 1 C26.8 1 34 7.7 34 16 C34 28 18 46 18 46Z"
               fill="url(#ptrGold)"
-              stroke="#5C4A1E"
+              stroke="#9a7a55"
               strokeWidth="1.2"
             />
-            <circle cx="18" cy="16" r="5" fill="#1A2E28" opacity="0.35" />
+            <circle cx="18" cy="16" r="5" fill="#333333" opacity="0.28" />
           </svg>
         </div>
 
@@ -237,16 +237,16 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
                 </linearGradient>
               ))}
               <radialGradient id="hubGold" cx="40%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="#F0D78C" />
-                <stop offset="55%" stopColor="#C4A35A" />
-                <stop offset="100%" stopColor="#6B5420" />
+                <stop offset="0%" stopColor="#e8d4b8" />
+                <stop offset="55%" stopColor="#c3a786" />
+                <stop offset="100%" stopColor="#9a7a55" />
               </radialGradient>
             </defs>
 
             {/* Segments */}
             {segments.map(({ prize, path, lx, ly, labelRot, i }) => (
               <g key={`${prize.id}-${i}`}>
-                <path d={path} fill={`url(#seg-${i})`} stroke="#0A1F1A" strokeWidth="1.5" />
+                <path d={path} fill={`url(#seg-${i})`} stroke="#ffffff" strokeWidth="2" />
                 <g transform={`translate(${lx}, ${ly}) rotate(${labelRot})`}>
                   <text
                     textAnchor="middle"
@@ -269,7 +269,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
               cy={cy}
               r={radius}
               fill="none"
-              stroke="#C4A35A"
+              stroke="#c3a786"
               strokeWidth="6"
               opacity="0.95"
             />
@@ -278,16 +278,16 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
               cy={cy}
               r={radius - 5}
               fill="none"
-              stroke="#5C4A1E"
+              stroke="#9a7a55"
               strokeWidth="1.5"
-              opacity="0.5"
+              opacity="0.55"
             />
 
             {/* Center hub */}
-            <circle cx={cx} cy={cy} r="38" fill="#1A2E28" />
+            <circle cx={cx} cy={cy} r="38" fill="#deddd3" />
             <circle cx={cx} cy={cy} r="30" fill="url(#hubGold)" />
-            <circle cx={cx} cy={cy} r="12" fill="#0F2A24" />
-            <circle cx={cx} cy={cy} r="5" fill="#F0D78C" />
+            <circle cx={cx} cy={cy} r="12" fill="#333333" />
+            <circle cx={cx} cy={cy} r="5" fill="#f7f6f2" />
           </svg>
         </div>
         <div className="wheel-stand" aria-hidden />

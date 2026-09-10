@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affGuessComplete, clientMeta } from "@/lib/aff";
 import { isDevPhone } from "@/lib/dev";
+import { notifySpinWin } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,6 +54,18 @@ export async function POST(request: Request) {
       ok: false,
       already_spun: true,
       prize_label: aff.prize_label ?? null,
+    });
+  }
+
+  if (!body.prizeEmpty) {
+    await notifySpinWin({
+      name,
+      phone,
+      brand: "place",
+      brandName: "خمن السعر",
+      prizeId,
+      prizeLabel,
+      prizeDescription: (body.prizeDescription ?? "").trim(),
     });
   }
 

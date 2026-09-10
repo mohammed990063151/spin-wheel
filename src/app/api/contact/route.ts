@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { affSaveExhibitionLead, clientMeta } from "@/lib/aff";
 import { parseLocale, t } from "@/lib/i18n";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
+import { notifyRegistration } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,6 +80,39 @@ export async function POST(request: Request) {
       { status: 502 },
     );
   }
+
+  const entityKey =
+    entity === "place"
+      ? "contact.entityPlace"
+      : entity === "ehg"
+        ? "contact.entityEhg"
+        : "contact.entityTreeline";
+  const typeKey = clientType === "companies" ? "contact.typeCompanies" : "contact.typeIndividuals";
+  const regionKey =
+    region === "central"
+      ? "contact.regionCentral"
+      : region === "eastern"
+        ? "contact.regionEastern"
+        : region === "western"
+          ? "contact.regionWestern"
+          : region === "southern"
+            ? "contact.regionSouthern"
+            : region === "northern"
+              ? "contact.regionNorthern"
+              : null;
+
+  await notifyRegistration({
+    name,
+    phone,
+    entity,
+    entityLabel: t(locale, entityKey),
+    clientType,
+    clientTypeLabel: t(locale, typeKey),
+    region: region || undefined,
+    regionLabel: regionKey ? t(locale, regionKey) : undefined,
+    source,
+    email: email || undefined,
+  });
 
   return NextResponse.json({ ok: true });
 }

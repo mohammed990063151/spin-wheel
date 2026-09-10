@@ -22,7 +22,7 @@ export default function SofaSaveModal({
     void QRCode.toDataURL(shareUrl, {
       width: 720,
       margin: 1,
-      color: { dark: "#1a1408", light: "#f8f1de" },
+      color: { dark: "#2a2418", light: "#ffffff" },
       errorCorrectionLevel: "M",
     }).then((url) => {
       if (!cancelled) setQrImage(url);

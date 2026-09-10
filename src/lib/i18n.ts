@@ -199,7 +199,7 @@ const ar = {
 
   "join.kicker": "PLACE × EHG × TREELINE",
   "join.title": "سجّل بياناتك",
-  "join.lead": "نموذجان قصيران — نحتاج اسمك وجوالك والجهة المهتم بها.",
+  "join.lead": "",
   "join.submit": "إرسال",
   "join.success": "شكراً لك — تم استلام بياناتك",
   "join.again": "تسجيل آخر",

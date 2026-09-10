@@ -63,7 +63,7 @@ export const FABRIC_COLORS: FabricColor[] = [
   { id: "olive", label: "زيتوني", labelEn: "Olive", hex: "#6F7B45", accent: "#C9C2B0" },
   { id: "cream", label: "كريمي", labelEn: "Cream", hex: "#E6D9C4", accent: "#8A6E2F" },
   { id: "navy", label: "كحلي", labelEn: "Navy", hex: "#1E3354", accent: "#D4C4A0" },
-  { id: "charcoal", label: "فحمي", labelEn: "Charcoal", hex: "#3B3B3B", accent: "#C4A35A" },
+  { id: "charcoal", label: "فحمي", labelEn: "Charcoal", hex: "#3B3B3B", accent: "#c3a786" },
   { id: "terracotta", label: "طيني", labelEn: "Terracotta", hex: "#B85C38", accent: "#E8DCC8" },
   { id: "sage", label: "أخضر هادئ", labelEn: "Sage", hex: "#8FA382", accent: "#F3EAD8" },
   { id: "sand", label: "رملي", labelEn: "Sand", hex: "#C4B08A", accent: "#3A3228" },

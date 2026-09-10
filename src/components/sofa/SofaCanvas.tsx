@@ -58,8 +58,8 @@ export default function SofaCanvas({
       gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }}
       style={{ width: "100%", height: "100%", touchAction: "none" }}
     >
-      <color attach="background" args={["#081410"]} />
-      <hemisphereLight args={["#f3ead8", "#1a2e28", 0.85]} />
+      <color attach="background" args={["#f7f6f2"]} />
+      <hemisphereLight args={["#ffffff", "#e8dcc4", 0.95]} />
       <ambientLight intensity={0.45} />
       <directionalLight position={[4, 6, 3]} intensity={1.35} color="#fff4dc" />
       <directionalLight position={[-3, 2, -2]} intensity={0.35} color="#7ee0c4" />
@@ -77,7 +77,7 @@ export default function SofaCanvas({
       </Suspense>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <circleGeometry args={[6.5, 48]} />
-        <meshStandardMaterial color="#1a2420" roughness={0.9} metalness={0.05} />
+        <meshStandardMaterial color="#e8dcc4" roughness={0.9} metalness={0.05} />
       </mesh>
       <OrbitControls
         enablePan={false}

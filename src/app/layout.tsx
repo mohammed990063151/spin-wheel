@@ -18,7 +18,7 @@ const tajawal = Tajawal({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#071612",
+  themeColor: "#f7f6f2",
   width: "device-width",
   initialScale: 1,
 };

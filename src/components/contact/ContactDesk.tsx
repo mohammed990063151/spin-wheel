@@ -49,7 +49,7 @@ export default function ContactDesk() {
     void QRCode.toDataURL(url, {
       width: 420,
       margin: 1,
-      color: { dark: "#142018", light: "#f4ead2" },
+      color: { dark: "#333333", light: "#f7f6f2" },
       errorCorrectionLevel: "M",
     }).then(setJoinQr);
   }, []);
@@ -401,32 +401,32 @@ export default function ContactDesk() {
                       key={product.id}
                       type="button"
                       className={`catalog-tile ${featured ? "is-featured" : ""}`}
-                      style={{ animationDelay: `${Math.min(index, 14) * 40}ms` }}
+                      style={{ animationDelay: `${Math.min(index, 16) * 55}ms` }}
                       onClick={() => setSelected(product)}
                     >
                       <div className="catalog-tile-media">
                         {image ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={image} alt={productTitle(product)} loading="lazy" />
+                          <img src={image} alt={productTitle(product)} loading="lazy" decoding="async" />
                         ) : (
                           <div className="catalog-card-fallback" />
                         )}
-                        <div className="catalog-tile-shade" />
+                        <div className="catalog-tile-shade" aria-hidden />
                         {product.new_arrivale ? (
                           <span className="catalog-badge">{t("contact.catalogNew")}</span>
                         ) : null}
-                        <div className="catalog-tile-copy">
-                          <h3>{productTitle(product)}</h3>
-                          {product.price != null ? (
-                            <strong>
-                              {t("contact.catalogPrice", {
-                                value: Number(product.price).toLocaleString(
-                                  locale === "ar" ? "ar-SA" : "en-US",
-                                ),
-                              })}
-                            </strong>
-                          ) : null}
-                        </div>
+                      </div>
+                      <div className="catalog-tile-copy">
+                        <h3>{productTitle(product)}</h3>
+                        {product.price != null ? (
+                          <strong>
+                            {t("contact.catalogPrice", {
+                              value: Number(product.price).toLocaleString(
+                                locale === "ar" ? "ar-SA" : "en-US",
+                              ),
+                            })}
+                          </strong>
+                        ) : null}
                       </div>
                     </button>
                   );

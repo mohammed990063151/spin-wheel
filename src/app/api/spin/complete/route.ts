@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affCompleteSpin, clientMeta } from "@/lib/aff";
-import { isBrandId } from "@/lib/prizes";
+import { getBrand, isBrandId } from "@/lib/prizes";
 import { isDevPhone } from "@/lib/dev";
+import { notifySpinWin } from "@/lib/whatsapp";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -54,6 +55,19 @@ export async function POST(request: Request) {
       ok: false,
       already_spun: true,
       prize_label: aff.prize_label ?? null,
+    });
+  }
+
+  if (!prizeEmpty) {
+    const brandConfig = getBrand(brand);
+    await notifySpinWin({
+      name: name || "عميل",
+      phone,
+      brand,
+      brandName: brandConfig.nameAr,
+      prizeId,
+      prizeLabel,
+      prizeDescription,
     });
   }
 

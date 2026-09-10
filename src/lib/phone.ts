@@ -35,3 +35,12 @@ export function normalizeOtpCode(input: string | number | undefined): string {
     .replace(/\D/g, "")
     .slice(0, 4);
 }
+
+/** WhatsApp / E.164: 05xxxxxxxx → +9665xxxxxxxx */
+export function toE164(input: string, defaultCountry = "966"): string {
+  const normalized = normalizePhone(input);
+  let digits = normalized.replace(/\D/g, "");
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  if (!digits.startsWith(defaultCountry)) digits = `${defaultCountry}${digits}`;
+  return `+${digits}`;
+}

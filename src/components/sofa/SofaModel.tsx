@@ -67,7 +67,7 @@ export default function SofaModel({ config }: { config: SofaConfig }) {
     config.pillows === "none" ? 0 : config.pillows === "pair" ? 2 : 3;
 
   const legColor =
-    config.legs === "gold" ? "#C4A35A" : config.legs === "hairpin" ? "#1A1A1A" : "#6B4A2A";
+    config.legs === "gold" ? "#c3a786" : config.legs === "hairpin" ? "#333333" : "#6B4A2A";
 
   const startX = -frame.innerW / 2 + frame.seatW / 2;
 
