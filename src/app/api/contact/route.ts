@@ -7,7 +7,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CLIENT_TYPES = new Set(["individuals", "companies"]);
-const ENTITIES = new Set(["place", "enala", "both"]);
+const ENTITIES = new Set(["ehg", "place", "treeline"]);
+const REGIONS = new Set(["central", "eastern", "western", "southern", "northern"]);
+const SOURCES = new Set(["desk", "qr"]);
 
 export async function POST(request: Request) {
   let body: {
@@ -17,6 +19,7 @@ export async function POST(request: Request) {
     region?: string;
     clientType?: string;
     entity?: string;
+    source?: string;
     notes?: string;
     locale?: string;
   };
@@ -33,6 +36,7 @@ export async function POST(request: Request) {
   const region = (body.region ?? "").trim();
   const clientType = (body.clientType ?? "").trim();
   const entity = (body.entity ?? "").trim();
+  const source = (body.source ?? "desk").trim();
   const notes = (body.notes ?? "").trim();
 
   if (!name) {
@@ -47,6 +51,12 @@ export async function POST(request: Request) {
   if (!ENTITIES.has(entity)) {
     return NextResponse.json({ ok: false, message: t(locale, "contact.entityRequired") }, { status: 400 });
   }
+  if (region && !REGIONS.has(region)) {
+    return NextResponse.json({ ok: false, message: t(locale, "contact.regionRequired") }, { status: 400 });
+  }
+  if (!SOURCES.has(source)) {
+    return NextResponse.json({ ok: false, message: t(locale, "api.invalidData") }, { status: 400 });
+  }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ ok: false, message: t(locale, "contact.emailInvalid") }, { status: 400 });
   }
@@ -57,7 +67,8 @@ export async function POST(request: Request) {
     email: email || undefined,
     region: region || undefined,
     client_type: clientType as "individuals" | "companies",
-    entity: entity as "place" | "enala" | "both",
+    entity: entity as "ehg" | "place" | "treeline",
+    source: source as "desk" | "qr",
     notes: notes || undefined,
     ...clientMeta(request),
   });

@@ -1,19 +1,21 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import QRCode from "qrcode";
 import SiteHeader from "@/components/SiteHeader";
 import { useLocale } from "@/components/LocaleProvider";
 import type { AffProduct, AffProductCategory } from "@/lib/aff";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
 
 type ClientType = "individuals" | "companies" | "";
-type Entity = "place" | "enala" | "both" | "";
+type Entity = "ehg" | "place" | "treeline" | "";
+type Region = "" | "central" | "eastern" | "western" | "southern" | "northern";
 
 const emptyForm = {
   name: "",
   phone: "",
   email: "",
-  region: "",
+  region: "" as Region,
   clientType: "" as ClientType,
   entity: "" as Entity,
   notes: "",
@@ -26,6 +28,8 @@ export default function ContactDesk() {
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [shake, setShake] = useState(false);
+  const [joinQr, setJoinQr] = useState("");
+  const [joinUrl, setJoinUrl] = useState("");
 
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [products, setProducts] = useState<AffProduct[]>([]);
@@ -36,6 +40,19 @@ export default function ContactDesk() {
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<AffProduct | null>(null);
+
+  useEffect(() => {
+    const origin =
+      process.env.NEXT_PUBLIC_SHARE_ORIGIN?.replace(/\/$/, "") || window.location.origin;
+    const url = `${origin}/join`;
+    setJoinUrl(url);
+    void QRCode.toDataURL(url, {
+      width: 420,
+      margin: 1,
+      color: { dark: "#142018", light: "#f4ead2" },
+      errorCorrectionLevel: "M",
+    }).then(setJoinQr);
+  }, []);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -70,9 +87,10 @@ export default function ContactDesk() {
           name,
           phone,
           email: form.email.trim(),
-          region: form.region.trim(),
+          region: form.region,
           clientType: form.clientType,
           entity: form.entity,
+          source: "desk",
           notes: form.notes.trim(),
           locale,
         }),
@@ -91,28 +109,23 @@ export default function ContactDesk() {
     }
   };
 
-  const loadCatalog = async (opts?: { categoryId?: number | null; q?: string }) => {
+  const loadCatalog = async () => {
     setCatalogLoading(true);
     setCatalogError("");
     try {
-      const params = new URLSearchParams({ per_page: "36" });
-      const categoryId = opts?.categoryId ?? activeCategory;
-      const q = opts?.q ?? search;
-      if (categoryId) params.set("main_category", String(categoryId));
-      if (q.trim()) params.set("q", q.trim());
+      const params = new URLSearchParams({ per_page: "48" });
+      if (activeCategory) params.set("main_category", String(activeCategory));
+      if (search.trim()) params.set("q", search.trim());
 
       const [productsRes, categoriesRes] = await Promise.all([
         fetch(`/api/products?${params}`),
-        categories.length
-          ? Promise.resolve(null)
-          : fetch("/api/products?categories=1"),
+        categories.length ? Promise.resolve(null) : fetch("/api/products?categories=1"),
       ]);
 
       const productsJson = (await productsRes.json()) as {
         ok?: boolean;
         data?: AffProduct[];
         meta?: { total: number };
-        message?: string;
       };
       if (!productsJson.ok) {
         setCatalogError(t("contact.catalogError"));
@@ -137,24 +150,18 @@ export default function ContactDesk() {
     }
   };
 
-  const openCatalog = () => {
-    setSearch("");
-    setActiveCategory(null);
-    setSelected(null);
-    setCatalogOpen(true);
-  };
-
   useEffect(() => {
     if (!catalogOpen) return;
     const timeout = window.setTimeout(() => {
       void loadCatalog();
-    }, 280);
+    }, 220);
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, search, catalogOpen]);
 
   const productTitle = useMemo(
-    () => (product: AffProduct) => (locale === "en" ? product.enname || product.arname : product.arname || product.enname),
+    () => (product: AffProduct) =>
+      locale === "en" ? product.enname || product.arname : product.arname || product.enname,
     [locale],
   );
 
@@ -173,9 +180,30 @@ export default function ContactDesk() {
           <p className="studio-kicker">{t("contact.kicker")}</p>
           <h1>{t("contact.title")}</h1>
           <p className="studio-lead">{t("contact.lead")}</p>
-          <button type="button" className="cta-btn contact-catalog-launch" onClick={openCatalog}>
-            {t("contact.catalogBtn")}
-          </button>
+          <div className="contact-intro-actions">
+            <button type="button" className="cta-btn contact-catalog-launch" onClick={() => setCatalogOpen(true)}>
+              {t("contact.catalogBtn")}
+            </button>
+            <a className="ghost-btn" href="/join">
+              {t("contact.joinLink")}
+            </a>
+          </div>
+
+          <div className="contact-qr-panel">
+            <div>
+              <p className="studio-kicker">{t("contact.qrTitle")}</p>
+              <p className="contact-qr-lead">{t("contact.qrLead")}</p>
+            </div>
+            {joinQr ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img className="contact-qr-image" src={joinQr} alt={t("contact.qrTitle")} />
+            ) : (
+              <div className="contact-qr-image is-empty" />
+            )}
+            <p className="contact-qr-url" dir="ltr">
+              {joinUrl}
+            </p>
+          </div>
         </div>
 
         <form className={`form-panel contact-form ${shake ? "shake" : ""}`} onSubmit={submit}>
@@ -217,12 +245,18 @@ export default function ContactDesk() {
             </div>
             <div className="form-field">
               <label htmlFor="contact-region">{t("contact.region")}</label>
-              <input
+              <select
                 id="contact-region"
-                placeholder={t("contact.regionPlaceholder")}
                 value={form.region}
-                onChange={(e) => patch("region", e.target.value)}
-              />
+                onChange={(e) => patch("region", e.target.value as Region)}
+              >
+                <option value="">{t("contact.regionSelect")}</option>
+                <option value="central">{t("contact.regionCentral")}</option>
+                <option value="eastern">{t("contact.regionEastern")}</option>
+                <option value="western">{t("contact.regionWestern")}</option>
+                <option value="southern">{t("contact.regionSouthern")}</option>
+                <option value="northern">{t("contact.regionNorthern")}</option>
+              </select>
             </div>
           </div>
 
@@ -251,6 +285,13 @@ export default function ContactDesk() {
             <div className="contact-choice-row is-triple">
               <button
                 type="button"
+                className={`contact-choice-btn ${form.entity === "ehg" ? "is-on" : ""}`}
+                onClick={() => patch("entity", "ehg")}
+              >
+                {t("contact.entityEhg")}
+              </button>
+              <button
+                type="button"
                 className={`contact-choice-btn ${form.entity === "place" ? "is-on" : ""}`}
                 onClick={() => patch("entity", "place")}
               >
@@ -258,17 +299,10 @@ export default function ContactDesk() {
               </button>
               <button
                 type="button"
-                className={`contact-choice-btn ${form.entity === "enala" ? "is-on" : ""}`}
-                onClick={() => patch("entity", "enala")}
+                className={`contact-choice-btn ${form.entity === "treeline" ? "is-on" : ""}`}
+                onClick={() => patch("entity", "treeline")}
               >
-                {t("contact.entityEnala")}
-              </button>
-              <button
-                type="button"
-                className={`contact-choice-btn ${form.entity === "both" ? "is-on" : ""}`}
-                onClick={() => patch("entity", "both")}
-              >
-                {t("contact.entityBoth")}
+                {t("contact.entityTreeline")}
               </button>
             </div>
           </fieldset>
@@ -358,39 +392,41 @@ export default function ContactDesk() {
             ) : products.length === 0 ? (
               <p className="catalog-status">{t("contact.catalogEmpty")}</p>
             ) : (
-              <div className="catalog-grid">
+              <div className="catalog-masonry">
                 {products.map((product, index) => {
                   const image = product.photo_url || product.photo_alt_url || product.gallery?.[0]?.url || "";
+                  const featured = index % 7 === 0;
                   return (
                     <button
                       key={product.id}
                       type="button"
-                      className="catalog-card"
-                      style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
+                      className={`catalog-tile ${featured ? "is-featured" : ""}`}
+                      style={{ animationDelay: `${Math.min(index, 14) * 40}ms` }}
                       onClick={() => setSelected(product)}
                     >
-                      <div className="catalog-card-media">
+                      <div className="catalog-tile-media">
                         {image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={image} alt={productTitle(product)} loading="lazy" />
                         ) : (
                           <div className="catalog-card-fallback" />
                         )}
+                        <div className="catalog-tile-shade" />
                         {product.new_arrivale ? (
                           <span className="catalog-badge">{t("contact.catalogNew")}</span>
                         ) : null}
-                      </div>
-                      <div className="catalog-card-copy">
-                        <h3>{productTitle(product)}</h3>
-                        {product.price != null ? (
-                          <strong>
-                            {t("contact.catalogPrice", {
-                              value: Number(product.price).toLocaleString(locale === "ar" ? "ar-SA" : "en-US"),
-                            })}
-                          </strong>
-                        ) : (
-                          <span className="catalog-muted">{product.category?.arname || product.sku || ""}</span>
-                        )}
+                        <div className="catalog-tile-copy">
+                          <h3>{productTitle(product)}</h3>
+                          {product.price != null ? (
+                            <strong>
+                              {t("contact.catalogPrice", {
+                                value: Number(product.price).toLocaleString(
+                                  locale === "ar" ? "ar-SA" : "en-US",
+                                ),
+                              })}
+                            </strong>
+                          ) : null}
+                        </div>
                       </div>
                     </button>
                   );
@@ -403,8 +439,13 @@ export default function ContactDesk() {
 
       {selected && (
         <div className="catalog-detail" role="dialog" aria-modal="true">
-          <button type="button" className="catalog-detail-backdrop" aria-label="close" onClick={() => setSelected(null)} />
-          <div className="catalog-detail-card">
+          <button
+            type="button"
+            className="catalog-detail-backdrop"
+            aria-label="close"
+            onClick={() => setSelected(null)}
+          />
+          <div className="catalog-detail-card catalog-detail-card-wide">
             <div className="catalog-detail-media">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

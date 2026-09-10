@@ -134,7 +134,8 @@ export async function affSaveExhibitionLead(input: {
   email?: string;
   region?: string;
   client_type: "individuals" | "companies";
-  entity: "place" | "enala" | "both";
+  entity: "ehg" | "place" | "treeline";
+  source?: "desk" | "qr";
   notes?: string;
   ip_address?: string;
   user_agent?: string;
