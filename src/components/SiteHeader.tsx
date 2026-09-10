@@ -4,7 +4,7 @@ import LangSwitch from "@/components/LangSwitch";
 import { useLocale } from "@/components/LocaleProvider";
 
 interface SiteHeaderProps {
-  active?: "home" | "sofa" | "guess";
+  active?: "home" | "sofa" | "guess" | "contact";
 }
 
 export default function SiteHeader({ active = "home" }: SiteHeaderProps) {
@@ -16,6 +16,9 @@ export default function SiteHeader({ active = "home" }: SiteHeaderProps) {
         PLACE × ENALA
       </a>
       <nav className="site-topbar-nav" aria-label={t("header.nav")}>
+        <a className={`site-topbar-btn ${active === "contact" ? "is-active" : ""}`} href="/contact">
+          {t("header.contact")}
+        </a>
         <a className={`site-topbar-btn ${active === "sofa" ? "is-active" : ""}`} href="/sofa">
           {t("header.sofa")}
         </a>
