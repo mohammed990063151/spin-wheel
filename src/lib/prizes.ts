@@ -4,6 +4,8 @@ export interface Prize {
   id: string;
   label: string;
   labelEn: string;
+  shortLabel?: string;
+  shortLabelEn?: string;
   description: string;
   descriptionEn: string;
   color: string;
@@ -11,6 +13,10 @@ export interface Prize {
   textColor: string;
   icon: string;
   empty?: boolean;
+  /** Max times this prize can be awarded. Omit for unlimited. */
+  stock?: number;
+  /** True when stock is gone — slice stays on the wheel but cannot be won. */
+  exhausted?: boolean;
   /** Relative win chance. Higher = more likely. */
   weight: number;
 }
@@ -24,117 +30,199 @@ export interface BrandConfig {
 
 export const PLACE_PRIZES: Prize[] = [
   {
-    id: "discount",
-    label: "خصم",
-    labelEn: "Discount",
-    description: "خصم على طلبك",
-    descriptionEn: "A discount on your order",
-    color: "#deddd3",
-    colorAlt: "#f7f6f2",
-    textColor: "#333333",
-    icon: "٪",
-    weight: 1,
-  },
-  {
-    id: "pillow",
-    label: "وسادة",
-    labelEn: "Pillow",
-    description: "وسادة هدية",
-    descriptionEn: "A complimentary pillow",
+    id: "chair",
+    label: "كرسي",
+    labelEn: "Chair",
+    shortLabel: "كرسي",
+    shortLabelEn: "Chair",
+    description: "كرسي هدية من مصنع Place",
+    descriptionEn: "A complimentary chair from Place",
     color: "#c3a786",
     colorAlt: "#d4b896",
     textColor: "#ffffff",
     icon: "◆",
-    weight: 1,
+    stock: 3,
+    weight: 8,
+  },
+  {
+    id: "puff",
+    label: "بف للتسريحة",
+    labelEn: "Vanity puff",
+    shortLabel: "بف",
+    shortLabelEn: "Puff",
+    description: "بف للتسريحة هدية من مصنع Place",
+    descriptionEn: "A complimentary vanity puff from Place",
+    color: "#deddd3",
+    colorAlt: "#f7f6f2",
+    textColor: "#333333",
+    icon: "●",
+    stock: 3,
+    weight: 8,
+  },
+  {
+    id: "baloot",
+    label: "طاولة بلوت",
+    labelEn: "Baloot table",
+    shortLabel: "بلوت",
+    shortLabelEn: "Baloot",
+    description: "طاولة بلوت هدية من مصنع Place",
+    descriptionEn: "A complimentary baloot table from Place",
+    color: "#b8956f",
+    colorAlt: "#c3a786",
+    textColor: "#ffffff",
+    icon: "▣",
+    stock: 2,
+    weight: 6,
+  },
+  {
+    id: "artwork",
+    label: "لوحة",
+    labelEn: "Artwork",
+    shortLabel: "لوحة",
+    shortLabelEn: "Art",
+    description: "لوحة هدية من مصنع Place",
+    descriptionEn: "A complimentary artwork from Place",
+    color: "#e8e2d4",
+    colorAlt: "#f7f6f2",
+    textColor: "#333333",
+    icon: "▭",
+    stock: 5,
+    weight: 10,
+  },
+  {
+    id: "bedroom_design",
+    label: "تصميم غرفة نوم مجاني",
+    labelEn: "Free bedroom design",
+    shortLabel: "تصميم",
+    shortLabelEn: "Design",
+    description: "تصميم غرفة نوم مجاني من فريق Place",
+    descriptionEn: "A free bedroom design from the Place team",
+    color: "#d4c4a8",
+    colorAlt: "#e6d9c2",
+    textColor: "#333333",
+    icon: "✎",
+    stock: 2,
+    weight: 6,
+  },
+  {
+    id: "consult",
+    label: "استشارة مصمم مجانية",
+    labelEn: "Free designer consult",
+    shortLabel: "استشارة",
+    shortLabelEn: "Consult",
+    description: "استشارة مصمم مجانية من فريق Place",
+    descriptionEn: "A free designer consultation from Place",
+    color: "#c9b48a",
+    colorAlt: "#d6c49e",
+    textColor: "#2A2418",
+    icon: "✦",
+    stock: 2,
+    weight: 6,
   },
   {
     id: "none",
-    label: "لا شيء",
-    labelEn: "None",
-    description: "حظ أوفر",
+    label: "حظ أوفر",
+    labelEn: "Better luck",
+    shortLabel: "حظ أوفر",
+    shortLabelEn: "Luck",
+    description: "حظ أوفر في المرة القادمة",
     descriptionEn: "Better luck next time",
     color: "#ffffff",
     colorAlt: "#f7f6f2",
     textColor: "#999999",
     icon: "–",
     empty: true,
-    weight: 1,
-  },
-  {
-    id: "delivery",
-    label: "توصيل",
-    labelEn: "Delivery",
-    description: "توصيل مجاني",
-    descriptionEn: "Free delivery",
-    color: "#e8e2d4",
-    colorAlt: "#f7f6f2",
-    textColor: "#333333",
-    icon: "▸",
-    weight: 1,
-  },
-  {
-    id: "install",
-    label: "تركيب",
-    labelEn: "Assembly",
-    description: "تركيب مجاني",
-    descriptionEn: "Free assembly",
-    color: "#b8956f",
-    colorAlt: "#c3a786",
-    textColor: "#ffffff",
-    icon: "★",
-    weight: 1,
+    weight: 54,
   },
 ];
 
-/** Odds are not equal — grand prize is rare. Tune weights here. */
 export const ENALA_PRIZES: Prize[] = [
+  {
+    id: "resort_2nights",
+    label: "ليلتان في المنتجع",
+    labelEn: "2 resort nights",
+    shortLabel: "منتجع",
+    shortLabelEn: "Resort",
+    description: "ليلتان مجانيتان في أحد منتجعات إناله",
+    descriptionEn: "Two complimentary nights at an Enala resort",
+    color: "#B08D45",
+    colorAlt: "#C9A85A",
+    textColor: "#FFFFFF",
+    icon: "★",
+    stock: 2,
+    weight: 6,
+  },
+  {
+    id: "wallet_1000",
+    label: "1000 ريال بالمحفظة",
+    labelEn: "SAR 1000 wallet",
+    shortLabel: "1000﷼",
+    shortLabelEn: "1000",
+    description: "1000 ريال تُضاف لمحفظتك على موقع إناله",
+    descriptionEn: "SAR 1000 added to your Enala wallet",
+    color: "#C9B48A",
+    colorAlt: "#D6C49E",
+    textColor: "#2A2418",
+    icon: "﷼",
+    weight: 12,
+  },
   {
     id: "discount20",
     label: "خصم 20%",
     labelEn: "20% off",
+    shortLabel: "20%",
+    shortLabelEn: "20%",
     description: "خصم 20% على أي حجز بموقع إناله",
     descriptionEn: "20% off any booking on the Enala website",
     color: "#EFE4D0",
     colorAlt: "#F7F0E4",
     textColor: "#2A2418",
     icon: "٪",
-    weight: 55,
+    weight: 16,
   },
   {
-    id: "coupon500",
-    label: "500 ريال",
-    labelEn: "SAR 500",
-    description: "كوبون 500 ريال يُضاف للمحفظة على موقع إناله",
-    descriptionEn: "SAR 500 coupon added to your Enala wallet",
-    color: "#DCC8A4",
-    colorAlt: "#E8D8B8",
+    id: "discount50",
+    label: "خصم 50%",
+    labelEn: "50% off",
+    shortLabel: "50%",
+    shortLabelEn: "50%",
+    description: "خصم 50% على أي حجز بموقع إناله",
+    descriptionEn: "50% off any booking on the Enala website",
+    color: "#d4b896",
+    colorAlt: "#e2c9a8",
     textColor: "#2A2418",
-    icon: "﷼",
-    weight: 27,
+    icon: "٪",
+    weight: 10,
   },
   {
-    id: "coupon1000",
-    label: "1000 ريال",
-    labelEn: "SAR 1000",
-    description: "كوبون 1000 ريال يُضاف للمحفظة على موقع إناله",
-    descriptionEn: "SAR 1000 coupon added to your Enala wallet",
-    color: "#C9B48A",
-    colorAlt: "#D6C49E",
-    textColor: "#2A2418",
-    icon: "﷼",
-    weight: 13,
+    id: "luck",
+    label: "حظ أوفر",
+    labelEn: "Better luck",
+    shortLabel: "حظ أوفر",
+    shortLabelEn: "Luck",
+    description: "حظ أوفر في المرة القادمة",
+    descriptionEn: "Better luck next time",
+    color: "#f3eee6",
+    colorAlt: "#f7f6f2",
+    textColor: "#8a8174",
+    icon: "–",
+    empty: true,
+    weight: 50,
   },
   {
-    id: "free_night",
-    label: "ليلة مجانية",
-    labelEn: "Free night",
-    description: "ليلة مجانية بأحد منتجعات إناله — الجائزة الكبرى",
-    descriptionEn: "A free night at an Enala resort — the grand prize",
-    color: "#B08D45",
-    colorAlt: "#C9A85A",
+    id: "hotel_2nights",
+    label: "ليلة فندق مجاناً",
+    labelEn: "Free hotel night",
+    shortLabel: "فندق",
+    shortLabelEn: "Hotel",
+    description: "ليلة مجانية في أحد فنادق إناله",
+    descriptionEn: "A complimentary night at an Enala hotel",
+    color: "#9a7a55",
+    colorAlt: "#b08d45",
     textColor: "#FFFFFF",
     icon: "★",
-    weight: 5,
+    stock: 2,
+    weight: 6,
   },
 ];
 
@@ -165,8 +253,37 @@ export function isEmptyPrize(prize: Prize) {
   return Boolean(prize.empty);
 }
 
+export function emptyPrize(prizes: Prize[]) {
+  return prizes.find((prize) => prize.empty);
+}
+
+export function isPrizeWinnable(prize: Prize) {
+  return !prize.exhausted && Math.max(0, prize.weight) > 0;
+}
+
+export function applyPrizeStock(prizes: Prize[], counts: Record<string, number>): Prize[] {
+  return prizes.map((prize) => {
+    if (!prize.stock) return prize;
+    const used = Number(counts[prize.id] ?? 0);
+    if (Number.isFinite(used) && used >= prize.stock) {
+      return { ...prize, exhausted: true };
+    }
+    return prize;
+  });
+}
+
+export function resolveAwardedPrize(prizes: Prize[], landed: Prize): Prize {
+  if (!landed.exhausted) return landed;
+  return emptyPrize(prizes) ?? { ...landed, empty: true };
+}
+
 export function prizeLabel(prize: Pick<Prize, "label" | "labelEn">, locale: "ar" | "en") {
   return locale === "en" ? prize.labelEn : prize.label;
+}
+
+export function prizeWheelLabel(prize: Prize, locale: "ar" | "en") {
+  if (locale === "en") return prize.shortLabelEn || prize.labelEn;
+  return prize.shortLabel || prize.label;
 }
 
 export function prizeDescription(
@@ -208,11 +325,15 @@ export function rotationForPrize(
 }
 
 export function pickPrizeIndex(prizes: Prize[]): number {
-  const total = prizes.reduce((sum, prize) => sum + Math.max(0, prize.weight), 0);
-  if (total <= 0) return Math.floor(Math.random() * prizes.length);
+  const chances = prizes.map((prize) => (isPrizeWinnable(prize) ? Math.max(0, prize.weight) : 0));
+  const total = chances.reduce((sum, chance) => sum + chance, 0);
+  if (total <= 0) {
+    const emptyIndex = prizes.findIndex((prize) => prize.empty);
+    return emptyIndex >= 0 ? emptyIndex : 0;
+  }
   let cursor = Math.random() * total;
-  for (let i = 0; i < prizes.length; i++) {
-    cursor -= Math.max(0, prizes[i].weight);
+  for (let i = 0; i < chances.length; i++) {
+    cursor -= chances[i];
     if (cursor <= 0) return i;
   }
   return prizes.length - 1;

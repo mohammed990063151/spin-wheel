@@ -194,6 +194,7 @@ export async function notifyRegistration(input: {
   clientTypeLabel: string;
   region?: string;
   regionLabel?: string;
+  companyName?: string;
   source?: string;
   email?: string;
 }) {
@@ -206,6 +207,7 @@ export async function notifyRegistration(input: {
     client_type_label: input.clientTypeLabel,
     region: input.region || "",
     region_label: input.regionLabel || "",
+    company_name: input.companyName || "",
     source: input.source || "",
     email: input.email || "",
   });

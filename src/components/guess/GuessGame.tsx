@@ -214,7 +214,7 @@ export default function GuessGame() {
         <div className="bg-grain" />
       </div>
 
-      <SiteHeader active="guess" />
+      <SiteHeader active="home" />
 
       {phase === "intro" && (
         <section className="guess-intro">

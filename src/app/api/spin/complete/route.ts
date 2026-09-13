@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { affCompleteSpin, affPrizeStock, clientMeta } from "@/lib/aff";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { affCompleteSpin, clientMeta } from "@/lib/aff";
-import { getBrand, isBrandId } from "@/lib/prizes";
+import { applyPrizeStock, emptyPrize, getBrand, isBrandId } from "@/lib/prizes";
 import { isDevPhone } from "@/lib/dev";
-import { notifySpinWin } from "@/lib/whatsapp";
+import { notifyWin } from "@/lib/guest-notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,16 +36,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
+  const brandConfig = getBrand(brand);
+  const stock = await affPrizeStock(brand);
+  const livePrizes = applyPrizeStock(brandConfig.prizes, stock?.counts ?? {});
+  const requested = livePrizes.find((prize) => prize.id === prizeId);
+  const fallback = emptyPrize(livePrizes);
+  const exhausted = Boolean(requested?.exhausted) && !prizeEmpty;
+  const awarded = exhausted && fallback ? fallback : null;
+  const savedPrizeId = awarded?.id ?? prizeId;
+  const savedPrizeLabel = awarded?.label ?? prizeLabel;
+  const savedPrizeDescription = awarded?.description ?? prizeDescription;
+  const savedPrizeEmpty = awarded ? true : prizeEmpty;
+
   // aff is the single source of truth: it decides whether the phone already
   // spun and records the prize.
   const aff = await affCompleteSpin({
     name: name || undefined,
     phone,
     source: brand,
-    prize_id: prizeId,
-    prize_label: prizeLabel,
-    prize_description: prizeDescription || undefined,
-    prize_empty: prizeEmpty,
+    prize_id: savedPrizeId,
+    prize_label: savedPrizeLabel,
+    prize_description: savedPrizeDescription || undefined,
+    prize_empty: savedPrizeEmpty,
     spun_at: new Date().toISOString(),
     ...clientMeta(request),
   });
@@ -58,16 +70,15 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!prizeEmpty) {
-    const brandConfig = getBrand(brand);
-    await notifySpinWin({
+  if (!savedPrizeEmpty) {
+    await notifyWin({
       name: name || "عميل",
       phone,
       brand,
       brandName: brandConfig.nameAr,
-      prizeId,
-      prizeLabel,
-      prizeDescription,
+      prizeId: savedPrizeId,
+      prizeLabel: savedPrizeLabel,
+      prizeDescription: savedPrizeDescription,
     });
   }
 

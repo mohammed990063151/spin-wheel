@@ -7,7 +7,7 @@ import { useLocale } from "@/components/LocaleProvider";
 import SpinWheel, { type SpinWheelHandle } from "@/components/SpinWheel";
 import PrizeModal from "@/components/PrizeModal";
 import Confetti from "@/components/Confetti";
-import { getBrand, isEmptyPrize, prizeDescription, prizeLabel, type BrandId, type Prize } from "@/lib/prizes";
+import { getBrand, isEmptyPrize, prizeDescription, prizeLabel, applyPrizeStock, type BrandId, type Prize } from "@/lib/prizes";
 import { resumeAudio } from "@/lib/audio";
 import {
   clearPlaySession,
@@ -29,10 +29,27 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
   const [phase, setPhase] = useState<Phase>("wheel");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [prize, setPrize] = useState<Prize | null>(null);
+  const [prizes, setPrizes] = useState<Prize[]>(brand.prizes);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [authSession, setAuthSession] = useState(0);
   const [notice, setNotice] = useState("");
+  const countsRef = useRef<Record<string, number>>({});
+
+  const refreshStock = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/spin/stock?brand=${brandId}`, { cache: "no-store" });
+      const json = (await res.json()) as { counts?: Record<string, number> };
+      countsRef.current = json.counts ?? {};
+      setPrizes(applyPrizeStock(getBrand(brandId).prizes, countsRef.current));
+    } catch {
+      setPrizes(getBrand(brandId).prizes);
+    }
+  }, [brandId]);
+
+  useEffect(() => {
+    void refreshStock();
+  }, [refreshStock]);
 
   const resetForNextCustomer = useCallback(() => {
     window.clearTimeout(spinTimerRef.current);
@@ -118,6 +135,13 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
       userRef.current = next;
       savePlaySession(brandId, next);
       setUser(next);
+      if (!isEmptyPrize(p)) {
+        countsRef.current = {
+          ...countsRef.current,
+          [p.id]: (countsRef.current[p.id] ?? 0) + 1,
+        };
+        setPrizes(applyPrizeStock(getBrand(brandId).prizes, countsRef.current));
+      }
       void fetch("/api/spin/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -130,9 +154,11 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
           prizeDescription: p.description,
           prizeEmpty: isEmptyPrize(p),
         }),
-      }).catch(() => {});
+      })
+        .then(() => refreshStock())
+        .catch(() => {});
     },
-    [brandId],
+    [brandId, refreshStock],
   );
 
   const spinningLock = phase === "result" || showAuth;
@@ -172,7 +198,7 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
       <section className={`wheel-section ${phase === "wheel" ? "enter-scale" : ""}`}>
         <SpinWheel
           ref={wheelRef}
-          prizes={brand.prizes}
+          prizes={prizes}
           userName={user?.name}
           onWin={handleWin}
           onRequestSpin={handleRequestSpin}

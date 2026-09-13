@@ -3,18 +3,19 @@
 import { FormEvent, useState } from "react";
 import { useLocale } from "@/components/LocaleProvider";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
+import CitySearchField from "@/components/contact/CitySearchField";
 
 type ClientType = "individuals" | "companies" | "";
 type Entity = "ehg" | "place" | "treeline" | "";
-type Region = "" | "central" | "eastern" | "western" | "southern" | "northern";
 
 const emptyForm = {
   name: "",
   phone: "",
   email: "",
-  region: "" as Region,
+  city: "",
   clientType: "" as ClientType,
   entity: "" as Entity,
+  companyName: "",
 };
 
 export default function JoinDesk() {
@@ -26,7 +27,11 @@ export default function JoinDesk() {
   const [shake, setShake] = useState(false);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "clientType" && value !== "companies") next.companyName = "";
+      return next;
+    });
     setSuccess(false);
     if (error) setError("");
   };
@@ -43,10 +48,13 @@ export default function JoinDesk() {
 
     const name = form.name.trim();
     const phone = normalizePhone(form.phone);
+    const companyName = form.companyName.trim();
     if (!name) return flashError(t("auth.nameRequired"));
     if (!isValidPhone(phone)) return flashError(t("auth.phoneInvalid"));
     if (!form.clientType) return flashError(t("contact.typeRequired"));
+    if (form.clientType === "companies" && !companyName) return flashError(t("contact.companyRequired"));
     if (!form.entity) return flashError(t("contact.entityRequired"));
+    if (!form.city) return flashError(t("contact.cityRequired"));
 
     setSaving(true);
     setError("");
@@ -58,8 +66,9 @@ export default function JoinDesk() {
           name,
           phone,
           email: form.email.trim(),
-          region: form.region,
+          city: form.city,
           clientType: form.clientType,
+          companyName,
           entity: form.entity,
           source: "qr",
           locale,
@@ -139,19 +148,8 @@ export default function JoinDesk() {
               />
             </div>
             <div className="form-field">
-              <label htmlFor="join-region">{t("contact.region")}</label>
-              <select
-                id="join-region"
-                value={form.region}
-                onChange={(e) => patch("region", e.target.value as Region)}
-              >
-                <option value="">{t("contact.regionSelect")}</option>
-                <option value="central">{t("contact.regionCentral")}</option>
-                <option value="eastern">{t("contact.regionEastern")}</option>
-                <option value="western">{t("contact.regionWestern")}</option>
-                <option value="southern">{t("contact.regionSouthern")}</option>
-                <option value="northern">{t("contact.regionNorthern")}</option>
-              </select>
+              <label htmlFor="join-city">{t("contact.city")} *</label>
+              <CitySearchField id="join-city" value={form.city} onChange={(city) => patch("city", city)} />
             </div>
 
             <fieldset className="contact-choice">
@@ -172,6 +170,18 @@ export default function JoinDesk() {
                   {t("contact.typeCompanies")}
                 </button>
               </div>
+              {form.clientType === "companies" ? (
+                <div className="form-field field-reveal" style={{ marginTop: "0.85rem" }}>
+                  <label htmlFor="join-company">{t("contact.company")} *</label>
+                  <input
+                    id="join-company"
+                    autoComplete="organization"
+                    placeholder={t("contact.companyPlaceholder")}
+                    value={form.companyName}
+                    onChange={(e) => patch("companyName", e.target.value)}
+                  />
+                </div>
+              ) : null}
             </fieldset>
 
             <fieldset className="contact-choice">

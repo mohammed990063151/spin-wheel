@@ -1,5 +1,5 @@
-import GuessGame from "@/components/guess/GuessGame";
+import { redirect } from "next/navigation";
 
 export default function GuessPage() {
-  return <GuessGame />;
+  redirect("/");
 }

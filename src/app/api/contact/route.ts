@@ -2,14 +2,14 @@ import { NextResponse } from "next/server";
 import { affSaveExhibitionLead, clientMeta } from "@/lib/aff";
 import { parseLocale, t } from "@/lib/i18n";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { notifyRegistration } from "@/lib/whatsapp";
+import { notifyVisitor } from "@/lib/guest-notify";
+import { findCityById, resolveSaudiCity } from "@/lib/saudi-cities";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CLIENT_TYPES = new Set(["individuals", "companies"]);
 const ENTITIES = new Set(["ehg", "place", "treeline"]);
-const REGIONS = new Set(["central", "eastern", "western", "southern", "northern"]);
 const SOURCES = new Set(["desk", "qr"]);
 
 export async function POST(request: Request) {
@@ -18,7 +18,9 @@ export async function POST(request: Request) {
     phone?: string;
     email?: string;
     region?: string;
+    city?: string;
     clientType?: string;
+    companyName?: string;
     entity?: string;
     source?: string;
     notes?: string;
@@ -34,8 +36,10 @@ export async function POST(request: Request) {
   const name = (body.name ?? "").trim();
   const phone = normalizePhone(body.phone ?? "");
   const email = (body.email ?? "").trim();
-  const region = (body.region ?? "").trim();
+  const city = (body.city ?? "").trim();
+  const selectedCity = city ? findCityById(city) ?? resolveSaudiCity(city) : undefined;
   const clientType = (body.clientType ?? "").trim();
+  const companyName = (body.companyName ?? "").trim();
   const entity = (body.entity ?? "").trim();
   const source = (body.source ?? "desk").trim();
   const notes = (body.notes ?? "").trim();
@@ -52,8 +56,11 @@ export async function POST(request: Request) {
   if (!ENTITIES.has(entity)) {
     return NextResponse.json({ ok: false, message: t(locale, "contact.entityRequired") }, { status: 400 });
   }
-  if (region && !REGIONS.has(region)) {
-    return NextResponse.json({ ok: false, message: t(locale, "contact.regionRequired") }, { status: 400 });
+  if (clientType === "companies" && !companyName) {
+    return NextResponse.json({ ok: false, message: t(locale, "contact.companyRequired") }, { status: 400 });
+  }
+  if (!selectedCity) {
+    return NextResponse.json({ ok: false, message: t(locale, "contact.cityRequired") }, { status: 400 });
   }
   if (!SOURCES.has(source)) {
     return NextResponse.json({ ok: false, message: t(locale, "api.invalidData") }, { status: 400 });
@@ -62,12 +69,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: t(locale, "contact.emailInvalid") }, { status: 400 });
   }
 
+  const cityNameAr = selectedCity ? selectedCity.ar : "";
+  const cityName = selectedCity ? (locale === "en" ? selectedCity.en : selectedCity.ar) : "";
+
   const aff = await affSaveExhibitionLead({
     name,
     phone,
     email: email || undefined,
-    region: region || undefined,
+    region: selectedCity?.region,
+    city: cityNameAr || undefined,
     client_type: clientType as "individuals" | "companies",
+    company_name: clientType === "companies" ? companyName : undefined,
     entity: entity as "ehg" | "place" | "treeline",
     source: source as "desk" | "qr",
     notes: notes || undefined,
@@ -88,28 +100,17 @@ export async function POST(request: Request) {
         ? "contact.entityEhg"
         : "contact.entityTreeline";
   const typeKey = clientType === "companies" ? "contact.typeCompanies" : "contact.typeIndividuals";
-  const regionKey =
-    region === "central"
-      ? "contact.regionCentral"
-      : region === "eastern"
-        ? "contact.regionEastern"
-        : region === "western"
-          ? "contact.regionWestern"
-          : region === "southern"
-            ? "contact.regionSouthern"
-            : region === "northern"
-              ? "contact.regionNorthern"
-              : null;
 
-  await notifyRegistration({
+  await notifyVisitor({
     name,
     phone,
     entity,
     entityLabel: t(locale, entityKey),
     clientType,
     clientTypeLabel: t(locale, typeKey),
-    region: region || undefined,
-    regionLabel: regionKey ? t(locale, regionKey) : undefined,
+    region: selectedCity?.region,
+    regionLabel: cityName || undefined,
+    companyName: companyName || undefined,
     source,
     email: email || undefined,
   });

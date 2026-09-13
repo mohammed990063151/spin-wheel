@@ -12,6 +12,8 @@ import {
   getPrizeAtRotation,
   pickPrizeIndex,
   prizeLabel,
+  prizeWheelLabel,
+  resolveAwardedPrize,
   rotationForPrize,
   segmentAngle,
   segmentCount,
@@ -43,6 +45,10 @@ function spinEase(t: number): number {
   const u = (t - 0.82) / 0.18;
   const overshoot = Math.sin(u * Math.PI) * 0.014 * (1 - u);
   return 1 + overshoot;
+}
+
+function round(n: number) {
+  return Math.round(n * 1000) / 1000;
 }
 
 const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel(
@@ -121,7 +127,8 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
         setSpinning(false);
         spinningRef.current = false;
         setGlowPulse(false);
-        const prize = getPrizeAtRotation(prizes, end);
+        const landed = getPrizeAtRotation(prizes, end);
+        const prize = resolveAwardedPrize(prizes, landed);
         if (!prize.empty) playWinFanfare();
         setTimeout(() => onWin(prize), 900);
       }
@@ -143,24 +150,24 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
   const cy = size / 2;
   const radius = size / 2 - 8;
   const angle = segmentAngle(prizes);
-  const labelSize = prizes.length > 4 ? 13 : 12;
+  const labelSize = prizes.length > 8 ? 11 : prizes.length > 4 ? 13 : 12;
 
   const segments = prizes.map((prize, i) => {
     const startAngle = (i * angle - 90) * (Math.PI / 180);
     const endAngle = ((i + 1) * angle - 90) * (Math.PI / 180);
-    const x1 = cx + radius * Math.cos(startAngle);
-    const y1 = cy + radius * Math.sin(startAngle);
-    const x2 = cx + radius * Math.cos(endAngle);
-    const y2 = cy + radius * Math.sin(endAngle);
+    const x1 = round(cx + radius * Math.cos(startAngle));
+    const y1 = round(cy + radius * Math.sin(startAngle));
+    const x2 = round(cx + radius * Math.cos(endAngle));
+    const y2 = round(cy + radius * Math.sin(endAngle));
     const largeArc = angle > 180 ? 1 : 0;
     const path = `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 
     const mid = ((i + 0.5) * angle - 90) * (Math.PI / 180);
     const labelR = radius * 0.62;
-    const lx = cx + labelR * Math.cos(mid);
-    const ly = cy + labelR * Math.sin(mid);
+    const lx = round(cx + labelR * Math.cos(mid));
+    const ly = round(cy + labelR * Math.sin(mid));
     const rawRot = i * angle + angle / 2;
-    const labelRot = rawRot > 90 && rawRot < 270 ? rawRot + 180 : rawRot;
+    const labelRot = round(rawRot > 90 && rawRot < 270 ? rawRot + 180 : rawRot);
 
     return { prize, path, lx, ly, labelRot, i };
   });
@@ -257,7 +264,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
                     fontFamily="var(--font-cairo), sans-serif"
                     style={{ letterSpacing: "0.02em" }}
                   >
-                    {prizeLabel(prize, locale)}
+                    {prizeWheelLabel(prize, locale)}
                   </text>
                 </g>
               </g>

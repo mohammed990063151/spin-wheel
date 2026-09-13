@@ -6,18 +6,19 @@ import SiteHeader from "@/components/SiteHeader";
 import { useLocale } from "@/components/LocaleProvider";
 import type { AffProduct, AffProductCategory } from "@/lib/aff";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
+import CitySearchField from "@/components/contact/CitySearchField";
 
 type ClientType = "individuals" | "companies" | "";
 type Entity = "ehg" | "place" | "treeline" | "";
-type Region = "" | "central" | "eastern" | "western" | "southern" | "northern";
 
 const emptyForm = {
   name: "",
   phone: "",
   email: "",
-  region: "" as Region,
+  city: "",
   clientType: "" as ClientType,
   entity: "" as Entity,
+  companyName: "",
   notes: "",
 };
 
@@ -55,7 +56,11 @@ export default function ContactDesk() {
   }, []);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "clientType" && value !== "companies") next.companyName = "";
+      return next;
+    });
     setSuccess(false);
     if (error) setError("");
   };
@@ -72,10 +77,13 @@ export default function ContactDesk() {
 
     const name = form.name.trim();
     const phone = normalizePhone(form.phone);
+    const companyName = form.companyName.trim();
     if (!name) return flashError(t("auth.nameRequired"));
     if (!isValidPhone(phone)) return flashError(t("auth.phoneInvalid"));
     if (!form.clientType) return flashError(t("contact.typeRequired"));
+    if (form.clientType === "companies" && !companyName) return flashError(t("contact.companyRequired"));
     if (!form.entity) return flashError(t("contact.entityRequired"));
+    if (!form.city) return flashError(t("contact.cityRequired"));
 
     setSaving(true);
     setError("");
@@ -87,8 +95,9 @@ export default function ContactDesk() {
           name,
           phone,
           email: form.email.trim(),
-          region: form.region,
+          city: form.city,
           clientType: form.clientType,
+          companyName,
           entity: form.entity,
           source: "desk",
           notes: form.notes.trim(),
@@ -244,19 +253,8 @@ export default function ContactDesk() {
               />
             </div>
             <div className="form-field">
-              <label htmlFor="contact-region">{t("contact.region")}</label>
-              <select
-                id="contact-region"
-                value={form.region}
-                onChange={(e) => patch("region", e.target.value as Region)}
-              >
-                <option value="">{t("contact.regionSelect")}</option>
-                <option value="central">{t("contact.regionCentral")}</option>
-                <option value="eastern">{t("contact.regionEastern")}</option>
-                <option value="western">{t("contact.regionWestern")}</option>
-                <option value="southern">{t("contact.regionSouthern")}</option>
-                <option value="northern">{t("contact.regionNorthern")}</option>
-              </select>
+              <label htmlFor="contact-city">{t("contact.city")} *</label>
+              <CitySearchField id="contact-city" value={form.city} onChange={(city) => patch("city", city)} />
             </div>
           </div>
 
@@ -278,6 +276,18 @@ export default function ContactDesk() {
                 {t("contact.typeCompanies")}
               </button>
             </div>
+            {form.clientType === "companies" ? (
+              <div className="form-field field-reveal" style={{ marginTop: "0.85rem" }}>
+                <label htmlFor="contact-company">{t("contact.company")} *</label>
+                <input
+                  id="contact-company"
+                  autoComplete="organization"
+                  placeholder={t("contact.companyPlaceholder")}
+                  value={form.companyName}
+                  onChange={(e) => patch("companyName", e.target.value)}
+                />
+              </div>
+            ) : null}
           </fieldset>
 
           <fieldset className="contact-choice">
@@ -386,7 +396,15 @@ export default function ContactDesk() {
             </div>
 
             {catalogLoading ? (
-              <p className="catalog-status">{t("contact.catalogLoading")}</p>
+              <div className="catalog-masonry" aria-busy="true">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className={`catalog-tile catalog-skeleton ${index === 0 ? "is-featured" : ""}`}
+                    style={{ animationDelay: `${index * 70}ms` }}
+                  />
+                ))}
+              </div>
             ) : catalogError ? (
               <p className="field-error">{catalogError}</p>
             ) : products.length === 0 ? (
@@ -411,6 +429,7 @@ export default function ContactDesk() {
                         ) : (
                           <div className="catalog-card-fallback" />
                         )}
+                        <span className="catalog-tile-shine" aria-hidden />
                         <div className="catalog-tile-shade" aria-hidden />
                         {product.new_arrivale ? (
                           <span className="catalog-badge">{t("contact.catalogNew")}</span>
@@ -418,15 +437,6 @@ export default function ContactDesk() {
                       </div>
                       <div className="catalog-tile-copy">
                         <h3>{productTitle(product)}</h3>
-                        {product.price != null ? (
-                          <strong>
-                            {t("contact.catalogPrice", {
-                              value: Number(product.price).toLocaleString(
-                                locale === "ar" ? "ar-SA" : "en-US",
-                              ),
-                            })}
-                          </strong>
-                        ) : null}
                       </div>
                     </button>
                   );
@@ -461,13 +471,6 @@ export default function ContactDesk() {
                   ? selected.enshortdesc || selected.arshortdesc || ""
                   : selected.arshortdesc || selected.enshortdesc || ""}
               </p>
-              {selected.price != null && (
-                <strong className="catalog-detail-price">
-                  {t("contact.catalogPrice", {
-                    value: Number(selected.price).toLocaleString(locale === "ar" ? "ar-SA" : "en-US"),
-                  })}
-                </strong>
-              )}
               <button type="button" className="ghost-btn" onClick={() => setSelected(null)}>
                 {t("contact.catalogClose")}
               </button>

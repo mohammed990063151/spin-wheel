@@ -4,7 +4,7 @@ import LangSwitch from "@/components/LangSwitch";
 import { useLocale } from "@/components/LocaleProvider";
 
 interface SiteHeaderProps {
-  active?: "home" | "sofa" | "guess" | "contact";
+  active?: "home" | "sofa" | "contact";
 }
 
 export default function SiteHeader({ active = "home" }: SiteHeaderProps) {
@@ -21,9 +21,6 @@ export default function SiteHeader({ active = "home" }: SiteHeaderProps) {
         </a>
         <a className={`site-topbar-btn ${active === "sofa" ? "is-active" : ""}`} href="/sofa">
           {t("header.sofa")}
-        </a>
-        <a className={`site-topbar-btn is-game ${active === "guess" ? "is-active" : ""}`} href="/guess">
-          {t("header.guess")}
         </a>
         <LangSwitch />
       </nav>

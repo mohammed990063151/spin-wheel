@@ -3,6 +3,7 @@ import { isValidPhone, normalizePhone } from "@/lib/phone";
 import { affSaveSofa, clientMeta } from "@/lib/aff";
 import { parseLocale, t } from "@/lib/i18n";
 import { encodeSofaShare } from "@/lib/sofa-share";
+import { notifySofaSaved } from "@/lib/guest-notify";
 import {
   estimateSofaPrice,
   getFabricColor,
@@ -59,6 +60,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[sofa-save] aff", error);
   }
+
+  await notifySofaSaved({ name, phone });
 
   return NextResponse.json({
     ok: true,

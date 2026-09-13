@@ -87,6 +87,28 @@ export async function affLookupCustomer(phone: string, source: BrandId) {
   return affFetch(`/spin/customers/lookup?${query}`);
 }
 
+export async function affPrizeStock(source: BrandId) {
+  if (!isAffEnabled()) return null;
+  try {
+    const query = new URLSearchParams({ source }).toString();
+    const res = await fetch(`${affBase()}/spin/customers/stock?${query}`, {
+      headers: {
+        Accept: "application/json",
+        "X-Spin-Api-Key": affKey(),
+      },
+      cache: "no-store",
+    });
+    return (await res.json()) as {
+      ok?: boolean;
+      source?: string;
+      counts?: Record<string, number>;
+      message?: string;
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function affCompleteSpin(input: {
   name?: string;
   phone: string;
@@ -133,7 +155,9 @@ export async function affSaveExhibitionLead(input: {
   phone: string;
   email?: string;
   region?: string;
+  city?: string;
   client_type: "individuals" | "companies";
+  company_name?: string;
   entity: "ehg" | "place" | "treeline";
   source?: "desk" | "qr";
   notes?: string;
