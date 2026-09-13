@@ -29,10 +29,31 @@ const LIVE_AFF_API = "https://place.sa/api";
 const LIVE_AFF_KEY = "spin-aff-local";
 
 function affBase() {
+  if (process.env.VERCEL) return LIVE_AFF_API;
+
   const fromEnv = (process.env.AFF_API_URL ?? "").replace(/\/$/, "");
   const isLocal = /localhost|127\.0\.0\.1/i.test(fromEnv);
-  if (fromEnv && !(isLocal && process.env.VERCEL)) return fromEnv;
-  return LIVE_AFF_API;
+  if (fromEnv && !isLocal) {
+    try {
+      const url = new URL(fromEnv);
+      if (url.hostname === "place.sa" || url.hostname === "www.place.sa") {
+        url.protocol = "https:";
+        url.hostname = "place.sa";
+        url.pathname = url.pathname.replace(/\/+$/, "") || "/api";
+        return `${url.origin}${url.pathname}`.replace(/\/$/, "");
+      }
+    } catch {
+      /* use as-is */
+    }
+    return fromEnv;
+  }
+  return fromEnv || LIVE_AFF_API;
+}
+
+function affUrl(path: string) {
+  const base = affBase().replace(/\/$/, "");
+  const suffix = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${suffix}`.replace(/\/+$/, "");
 }
 
 function affKey() {
@@ -59,20 +80,34 @@ export function clientMeta(request: Request) {
 async function affFetch(path: string, init?: RequestInit): Promise<AffResponse | null> {
   if (!isAffEnabled()) return null;
   try {
-    const res = await fetch(`${affBase()}${path}`, {
-      ...init,
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "X-Spin-Api-Key": affKey(),
-        ...(init?.headers ?? {}),
-      },
-      cache: "no-store",
-    });
+    const res = await affRequest(affUrl(path), init);
     return (await res.json()) as AffResponse;
   } catch {
     return null;
   }
+}
+
+async function affRequest(url: string, init?: RequestInit, hops = 0): Promise<Response> {
+  const res = await fetch(url, {
+    ...init,
+    redirect: "manual",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Spin-Api-Key": affKey(),
+      ...(init?.headers ?? {}),
+    },
+    cache: "no-store",
+  });
+
+  const location = res.headers.get("location");
+  if (location && hops < 3 && [301, 302, 303, 307, 308].includes(res.status)) {
+    const next = new URL(location, url);
+    next.protocol = "https:";
+    return affRequest(next.toString().replace(/\/+$/, ""), init, hops + 1);
+  }
+
+  return res;
 }
 
 export async function affRegisterCustomer(input: {
@@ -93,17 +128,15 @@ export async function affLookupCustomer(phone: string, source: BrandId) {
   return affFetch(`/spin/customers/lookup?${query}`);
 }
 
+export function affPublicOrigin() {
+  return affBase().replace(/\/api\/?$/, "").replace(/\/$/, "") || "https://place.sa";
+}
+
 export async function affPrizeStock(source: BrandId) {
   if (!isAffEnabled()) return null;
   try {
     const query = new URLSearchParams({ source }).toString();
-    const res = await fetch(`${affBase()}/spin/customers/stock?${query}`, {
-      headers: {
-        Accept: "application/json",
-        "X-Spin-Api-Key": affKey(),
-      },
-      cache: "no-store",
-    });
+    const res = await affRequest(affUrl(`/spin/customers/stock?${query}`));
     return (await res.json()) as {
       ok?: boolean;
       source?: string;
@@ -214,13 +247,7 @@ export async function affListProducts(params: {
   const suffix = query.toString() ? `?${query}` : "";
   if (!isAffEnabled()) return null;
   try {
-    const res = await fetch(`${affBase()}/place/products${suffix}`, {
-      headers: {
-        Accept: "application/json",
-        "X-Spin-Api-Key": affKey(),
-      },
-      cache: "no-store",
-    });
+    const res = await affRequest(affUrl(`/place/products${suffix}`));
     return (await res.json()) as {
       ok?: boolean;
       data?: AffProduct[];
@@ -240,13 +267,7 @@ export async function affListProducts(params: {
 export async function affListProductCategories() {
   if (!isAffEnabled()) return null;
   try {
-    const res = await fetch(`${affBase()}/place/product-categories`, {
-      headers: {
-        Accept: "application/json",
-        "X-Spin-Api-Key": affKey(),
-      },
-      cache: "no-store",
-    });
+    const res = await affRequest(affUrl("/place/product-categories"));
     return (await res.json()) as {
       ok?: boolean;
       data?: AffProductCategory[];

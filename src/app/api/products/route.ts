@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { affListProductCategories, affListProducts, type AffProduct } from "@/lib/aff";
+import { affListProductCategories, affListProducts, affPublicOrigin, type AffProduct } from "@/lib/aff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function affOrigin() {
-  return (process.env.AFF_API_URL ?? "").replace(/\/api\/?$/, "").replace(/\/$/, "");
+  return affPublicOrigin();
 }
 
 function fixMediaUrl(url?: string | null): string | null {
