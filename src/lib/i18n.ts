@@ -20,6 +20,7 @@ export function localeDir(locale: Locale): "rtl" | "ltr" {
 const ar = {
   "meta.title": "عجلة الحظ | Place × Enala",
   "meta.description": "مسابقة عجلة الحظ — فنادق إناله ومصنع Place",
+  "kiosk.enter": "اضغط للدخول إلى الشاشة الكاملة",
 
   "header.nav": "الألعاب",
   "header.sofa": "اصنع كنبتك",
@@ -29,6 +30,11 @@ const ar = {
   "header.ar": "عربي",
   "header.en": "EN",
   "header.back": "العودة",
+  "nav.home": "الرئيسية",
+  "nav.enala": "إناله",
+  "nav.place": "Place",
+  "nav.sofa": "الكنبة",
+  "nav.contact": "التسجيل",
 
   "home.kicker": "PLACE × ENALA — INDEX 2026",
   "home.title": "مسابقة عجلة الحظ",
@@ -216,6 +222,7 @@ const ar = {
 const en: Record<keyof typeof ar, string> = {
   "meta.title": "Spin the Wheel | Place × Enala",
   "meta.description": "Spin-the-wheel prize draw — Enala hotels and Place furniture",
+  "kiosk.enter": "Tap to enter full screen",
 
   "header.nav": "Games",
   "header.sofa": "Build your sofa",
@@ -225,6 +232,11 @@ const en: Record<keyof typeof ar, string> = {
   "header.ar": "عربي",
   "header.en": "EN",
   "header.back": "Back",
+  "nav.home": "Home",
+  "nav.enala": "Enala",
+  "nav.place": "Place",
+  "nav.sofa": "Sofa",
+  "nav.contact": "Check-in",
 
   "home.kicker": "PLACE × ENALA — INDEX 2026",
   "home.title": "Spin the Wheel",

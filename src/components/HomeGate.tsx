@@ -1,6 +1,6 @@
 "use client";
 
-import SiteHeader from "@/components/SiteHeader";
+import Link from "next/link";
 import { useLocale } from "@/components/LocaleProvider";
 
 export default function HomeGate() {
@@ -14,8 +14,6 @@ export default function HomeGate() {
         <div className="bg-grain" />
       </div>
 
-      <SiteHeader active="home" />
-
       <section className="gate-intro">
         <p className="gate-kicker">{t("home.kicker")}</p>
         <h1>{t("home.title")}</h1>
@@ -23,7 +21,7 @@ export default function HomeGate() {
       </section>
 
       <section className="gate-cards">
-        <a className="gate-banner is-enala" href="/enala">
+        <Link className="gate-banner is-enala" href="/enala" scroll={false} prefetch>
           <span className="gate-banner-media" aria-hidden>
             <img
               src="/brands/enala-villa.jpg"
@@ -42,9 +40,9 @@ export default function HomeGate() {
             <p>{t("home.enala.prizes")}</p>
             <span className="gate-cta">{t("home.enala.cta")}</span>
           </span>
-        </a>
+        </Link>
 
-        <a className="gate-banner is-place" href="/place">
+        <Link className="gate-banner is-place" href="/place" scroll={false} prefetch>
           <span className="gate-banner-media" aria-hidden>
             <img
               src="/brands/place-lounge.jpg"
@@ -63,7 +61,7 @@ export default function HomeGate() {
             <p>{t("home.place.prizes")}</p>
             <span className="gate-cta">{t("home.place.cta")}</span>
           </span>
-        </a>
+        </Link>
       </section>
     </main>
   );

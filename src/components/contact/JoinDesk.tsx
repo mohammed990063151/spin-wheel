@@ -97,9 +97,6 @@ export default function JoinDesk() {
       </div>
 
       <section className="join-shell">
-        <div className="join-brand" lang="en">
-          PLACE × EHG × TREELINE
-        </div>
         <p className="studio-kicker">{t("join.kicker")}</p>
         <h1>{t("join.title")}</h1>
         <p className="studio-lead">{t("join.lead")}</p>

@@ -1,8 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import QRCode from "qrcode";
-import SiteHeader from "@/components/SiteHeader";
 import { useLocale } from "@/components/LocaleProvider";
 import type { AffProduct, AffProductCategory } from "@/lib/aff";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
@@ -182,8 +182,6 @@ export default function ContactDesk() {
         <div className="bg-grain" />
       </div>
 
-      <SiteHeader active="contact" />
-
       <section className="contact-shell">
         <div className="contact-intro">
           <p className="studio-kicker">{t("contact.kicker")}</p>
@@ -193,9 +191,9 @@ export default function ContactDesk() {
             <button type="button" className="cta-btn contact-catalog-launch" onClick={() => setCatalogOpen(true)}>
               {t("contact.catalogBtn")}
             </button>
-            <a className="ghost-btn" href="/join">
+            <Link className="ghost-btn" href="/join" prefetch>
               {t("contact.joinLink")}
-            </a>
+            </Link>
           </div>
 
           <div className="contact-qr-panel">

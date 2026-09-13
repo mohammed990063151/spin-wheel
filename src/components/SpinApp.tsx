@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import AuthModal, { type AuthUser } from "@/components/AuthModal";
-import LangSwitch from "@/components/LangSwitch";
 import { useLocale } from "@/components/LocaleProvider";
 import SpinWheel, { type SpinWheelHandle } from "@/components/SpinWheel";
 import PrizeModal from "@/components/PrizeModal";
@@ -170,16 +169,6 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
         <div className="bg-orb bg-orb-b" />
         <div className="bg-grain" />
       </div>
-
-      <header className="site-brand">
-        <a className="brand-back" href="/">
-          {t("header.back")}
-        </a>
-        <span className="brand-mark" lang="en" dir="ltr">
-          {brand.name}
-        </span>
-        <LangSwitch />
-      </header>
 
       <section className="page-intro enter-up">
         <h1 className="hero-brand hero-brand-compact" lang="en" dir="ltr">

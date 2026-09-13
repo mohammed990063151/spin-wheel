@@ -39,6 +39,96 @@ html {
   scroll-behavior: smooth;
 }
 
+html.kiosk-mode,
+html.kiosk-mode body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html.kiosk-mode input,
+html.kiosk-mode textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.kiosk-enter {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  border: 0;
+  margin: 0;
+  padding: 2rem;
+  background: rgba(247, 246, 242, 0.94);
+  color: var(--ink);
+  font: inherit;
+  font-size: clamp(1.2rem, 2.4vw, 2rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.kiosk-enter span {
+  max-width: 16ch;
+  text-align: center;
+  line-height: 1.45;
+}
+
+html.kiosk-mode .site-topbar,
+html.kiosk-mode .site-brand {
+  display: none;
+}
+
+.kiosk-lang {
+  position: fixed;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 20;
+}
+
+.kiosk-nav {
+  position: fixed;
+  z-index: 20;
+  bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: calc(100vw - 1.5rem);
+  padding: 0.3rem;
+  overflow-x: auto;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12px 28px rgba(51, 41, 24, 0.12);
+}
+
+.kiosk-nav a {
+  flex: none;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kiosk-nav a.is-on {
+  color: #2a2418;
+  background: linear-gradient(135deg, #f0d78c, #c4a35a);
+}
+
+html.has-kiosk-nav .page,
+html.has-kiosk-nav .gate,
+html.has-kiosk-nav .studio-page {
+  padding-bottom: 4.6rem;
+}
+
 body {
   margin: 0;
   min-height: 100dvh;
@@ -347,6 +437,7 @@ html[dir="ltr"] .cta-btn svg {
   border-radius: 1.25rem;
   background: var(--panel);
   border: 1px solid var(--panel-border);
+  overflow: visible;
   backdrop-filter: blur(16px);
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.35),
@@ -435,6 +526,11 @@ html[dir="rtl"] .form-field select {
   border: 1px solid rgba(196, 163, 90, 0.28);
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 16px 36px rgba(51, 41, 24, 0.16);
+}
+
+.city-search-list.is-portal {
+  inset: auto;
+  z-index: 9999;
 }
 
 .city-search-option {
@@ -2380,6 +2476,11 @@ html[dir="rtl"] .form-field select {
   width: min(520px, 100%);
   margin: 0 auto;
   padding-top: 1rem;
+}
+
+.join-shell .studio-kicker {
+  white-space: nowrap;
+  letter-spacing: 0.08em;
 }
 
 .join-brand {

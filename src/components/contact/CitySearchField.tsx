@@ -1,6 +1,7 @@
 "use client";
 
-import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { useLocale } from "@/components/LocaleProvider";
 import { findCityById, resolveSaudiCity, searchSaudiCities } from "@/lib/saudi-cities";
 
@@ -16,7 +17,9 @@ export default function CitySearchField({ id, value, onChange }: Props) {
   const [query, setQuery] = useState(selected ? (locale === "en" ? selected.en : selected.ar) : "");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const typingRef = useRef(false);
   const listId = `${id}-list`;
 
@@ -38,13 +41,43 @@ export default function CitySearchField({ id, value, onChange }: Props) {
     setActive(0);
   }, [query]);
 
+  const updateMenuPosition = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    const box = input.getBoundingClientRect();
+    const maxHeight = Math.min(240, window.innerHeight - box.bottom - 16);
+    setMenuStyle({
+      position: "fixed",
+      top: box.bottom + 6,
+      left: box.left,
+      width: box.width,
+      maxHeight: Math.max(maxHeight, 120),
+      zIndex: 9999,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updateMenuPosition();
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+    };
+  }, [open, query]);
+
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
-      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(event.target as Node)) {
+        const menu = document.getElementById(listId);
+        if (menu?.contains(event.target as Node)) return;
+        setOpen(false);
+      }
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, []);
+  }, [listId]);
 
   const pick = (cityId: string) => {
     const city = findCityById(cityId);
@@ -59,7 +92,7 @@ export default function CitySearchField({ id, value, onChange }: Props) {
       pick(match.id);
       return true;
     }
-    onChange("");
+    if (!value) onChange("");
     return false;
   };
 
@@ -87,9 +120,40 @@ export default function CitySearchField({ id, value, onChange }: Props) {
     if (event.key === "Escape") setOpen(false);
   };
 
+  const menu =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <ul className="city-search-list is-portal" id={listId} role="listbox" style={menuStyle}>
+            {results.length === 0 ? (
+              <li className="city-search-empty">{t("contact.cityEmpty")}</li>
+            ) : (
+              results.map((city, index) => (
+                <li key={city.id} role="presentation">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={active === index}
+                    className={`city-search-option ${active === index ? "is-active" : ""} ${
+                      value === city.id ? "is-picked" : ""
+                    }`}
+                    onMouseEnter={() => setActive(index)}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => pick(city.id)}
+                  >
+                    {locale === "en" ? city.en : city.ar}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>,
+          document.body,
+        )
+      : null;
+
   return (
     <div className="city-search" ref={wrapRef}>
       <input
+        ref={inputRef}
         id={id}
         role="combobox"
         aria-expanded={open}
@@ -108,35 +172,11 @@ export default function CitySearchField({ id, value, onChange }: Props) {
         }}
         onFocus={() => setOpen(true)}
         onBlur={() => {
-          window.setTimeout(() => commitTypedCity(query), 120);
+          window.setTimeout(() => commitTypedCity(query), 180);
         }}
         onKeyDown={onKeyDown}
       />
-      {open ? (
-        <ul className="city-search-list" id={listId} role="listbox">
-          {results.length === 0 ? (
-            <li className="city-search-empty">{t("contact.cityEmpty")}</li>
-          ) : (
-            results.map((city, index) => (
-              <li key={city.id} role="presentation">
-                <button
-                  type="button"
-                  role="option"
-                  aria-selected={active === index}
-                  className={`city-search-option ${active === index ? "is-active" : ""} ${
-                    value === city.id ? "is-picked" : ""
-                  }`}
-                  onMouseEnter={() => setActive(index)}
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => pick(city.id)}
-                >
-                  {locale === "en" ? city.en : city.ar}
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
-      ) : null}
+      {menu}
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import AuthModal, { type AuthUser } from "@/components/AuthModal";
-import SiteHeader from "@/components/SiteHeader";
 import { useLocale } from "@/components/LocaleProvider";
 import SofaSaveModal from "@/components/sofa/SofaSaveModal";
 import {
@@ -144,8 +143,6 @@ export default function SofaStudio() {
         <div className="bg-orb bg-orb-b" />
         <div className="bg-grain" />
       </div>
-
-      <SiteHeader active="sofa" />
 
       <section className="studio-shell">
         <div className="studio-stage">

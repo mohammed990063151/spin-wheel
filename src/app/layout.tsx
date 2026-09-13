@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Cairo, Tajawal } from "next/font/google";
 import { LocaleProvider } from "@/components/LocaleProvider";
+import KioskShell from "@/components/KioskShell";
 import { localeDir, parseLocale, t } from "@/lib/i18n";
 import "./globals.css";
 
@@ -21,6 +22,9 @@ export const viewport: Viewport = {
   themeColor: "#f7f6f2",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,6 +32,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t(locale, "meta.title"),
     description: t(locale, "meta.description"),
+    applicationName: "عجلة الحظ",
+    appleWebApp: {
+      capable: true,
+      title: "عجلة الحظ",
+      statusBarStyle: "black-translucent",
+    },
+    icons: {
+      icon: "/icon.svg",
+      apple: "/icon.svg",
+    },
   };
 }
 
@@ -41,7 +55,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${cairo.variable} ${tajawal.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <LocaleProvider initialLocale={locale}>{children}</LocaleProvider>
+        <LocaleProvider initialLocale={locale}>
+          <KioskShell>{children}</KioskShell>
+        </LocaleProvider>
       </body>
     </html>
   );
