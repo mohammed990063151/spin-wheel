@@ -25,12 +25,18 @@ type AffResponse = {
   message?: string;
 };
 
+const LIVE_AFF_API = "https://place.sa/api";
+const LIVE_AFF_KEY = "spin-aff-local";
+
 function affBase() {
-  return (process.env.AFF_API_URL ?? "").replace(/\/$/, "");
+  const fromEnv = (process.env.AFF_API_URL ?? "").replace(/\/$/, "");
+  const isLocal = /localhost|127\.0\.0\.1/i.test(fromEnv);
+  if (fromEnv && !(isLocal && process.env.VERCEL)) return fromEnv;
+  return LIVE_AFF_API;
 }
 
 function affKey() {
-  return process.env.AFF_SPIN_API_KEY ?? "";
+  return process.env.AFF_SPIN_API_KEY || LIVE_AFF_KEY;
 }
 
 export function isAffEnabled() {
