@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/LocaleProvider";
 import type { SofaCanvasHandle } from "@/components/sofa/SofaCanvas";
 import {
-ydv hg  sofaStyleTag,
+  sofaStyleTag,
   sofaSummary,
   type SofaConfig,
 } from "@/lib/sofa";
