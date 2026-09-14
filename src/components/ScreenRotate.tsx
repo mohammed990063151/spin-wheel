@@ -34,9 +34,16 @@ export default function ScreenRotate() {
       applyAngle(0);
       setAngle(0);
     };
+    const resume = () => {
+      const next = readAngle();
+      setAngle(next);
+      applyAngle(next);
+    };
     window.addEventListener("spin-unlock", reset);
+    window.addEventListener("spin-resume", resume);
     return () => {
       window.removeEventListener("spin-unlock", reset);
+      window.removeEventListener("spin-resume", resume);
       delete document.documentElement.dataset.rot;
       document.documentElement.classList.remove("is-rotated");
     };
