@@ -41,12 +41,8 @@ function hasEnteredKiosk() {
   return sessionStorage.getItem(KIOSK_ON) === "1";
 }
 
-function pausePath() {
-  return sessionStorage.getItem(KIOSK_PAUSE);
-}
-
-function isPausedOn(pathname: string) {
-  return pausePath() === pathname;
+function isKioskPaused() {
+  return sessionStorage.getItem(KIOSK_PAUSE) === "1";
 }
 
 function isFullscreenNow() {
@@ -56,6 +52,10 @@ function isFullscreenNow() {
       window.matchMedia("(display-mode: standalone)").matches ||
       (navigator as Navigator & { standalone?: boolean }).standalone,
   );
+}
+
+function isUnlockControl(target: EventTarget | null) {
+  return Boolean((target as HTMLElement | null)?.closest(".kiosk-unlock-dot, .kiosk-pin"));
 }
 
 async function requestKioskFullscreen() {
@@ -79,8 +79,8 @@ async function requestKioskFullscreen() {
   }
 }
 
-async function restoreNormalScreen(pathname: string) {
-  sessionStorage.setItem(KIOSK_PAUSE, pathname);
+async function restoreNormalScreen() {
+  sessionStorage.setItem(KIOSK_PAUSE, "1");
   sessionStorage.setItem(ROT_SAVE, document.documentElement.dataset.rot || "0");
   sessionStorage.removeItem("spin-desk");
   localStorage.setItem("spin-screen-rot", "0");
@@ -105,6 +105,7 @@ function resumeKioskScreen() {
     window.dispatchEvent(new Event("spin-resume"));
   }
   sessionStorage.setItem(KIOSK_ON, "1");
+  document.documentElement.classList.add("kiosk-mode");
 }
 
 export default function KioskShell({ children }: { children: ReactNode }) {
@@ -123,7 +124,7 @@ export default function KioskShell({ children }: { children: ReactNode }) {
 
   const sync = useCallback(() => {
     const deskNow = isDeskMode();
-    const pausedNow = isPausedOn(pathname);
+    const pausedNow = isKioskPaused();
     setDesk(deskNow);
     setPaused(pausedNow);
     if (!stand || deskNow || pausedNow) {
@@ -145,15 +146,29 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     window.setTimeout(() => pinRef.current?.focus(), 40);
   }, []);
 
+  const resumeKiosk = useCallback(() => {
+    resumeKioskScreen();
+    setPaused(false);
+    setDesk(false);
+    setLocked(false);
+    void requestKioskFullscreen().then((ok) => {
+      if (!ok) {
+        sessionStorage.removeItem(KIOSK_ON);
+        setLocked(wantsEnterOverlay(pathname));
+      }
+      sync();
+    });
+  }, [pathname, sync]);
+
   const unlock = useCallback(async () => {
-    await restoreNormalScreen(pathname);
+    await restoreNormalScreen();
     setPinOpen(false);
     setPin("");
     setPinError(false);
     setPaused(true);
     setDesk(false);
     setLocked(false);
-  }, [pathname]);
+  }, []);
 
   const checkPin = useCallback(
     (event?: FormEvent) => {
@@ -170,12 +185,6 @@ export default function KioskShell({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    const leavingPause = Boolean(pausePath() && pausePath() !== pathname);
-    if (leavingPause) {
-      resumeKioskScreen();
-      setPaused(false);
-    }
-
     if (isDeskMode()) {
       sessionStorage.setItem("spin-desk", "1");
       setDesk(true);
@@ -191,38 +200,28 @@ export default function KioskShell({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove("has-kiosk-nav");
       return;
     }
-    if (isPausedOn(pathname)) {
-      setDesk(false);
-      setPaused(true);
-      setLocked(false);
-      document.documentElement.classList.remove("kiosk-mode");
-      document.documentElement.classList.toggle("has-kiosk-nav", pathname !== "/join");
-      return;
-    }
 
     sync();
-    if (leavingPause && !isFullscreenNow()) {
-      void requestKioskFullscreen().then((ok) => {
-        if (!ok) sessionStorage.removeItem(KIOSK_ON);
-        sync();
-      });
-    }
 
     const onChange = () => sync();
     document.addEventListener("fullscreenchange", onChange);
     window.addEventListener("resize", onChange);
 
-    const restoreFullscreen = (event: Event) => {
-      if ((event.target as HTMLElement | null)?.closest(".kiosk-unlock-dot, .kiosk-pin")) return;
-      if (isDeskMode() || isPausedOn(pathname) || isFullscreenNow() || pinOpen) return;
+    const onPointerDown = (event: Event) => {
+      if (isUnlockControl(event.target) || isDeskMode()) return;
+      if (isKioskPaused()) {
+        resumeKiosk();
+        return;
+      }
+      if (isFullscreenNow() || pinOpen) return;
       if (!hasEnteredKiosk() && !wantsEnterOverlay(pathname)) return;
       void requestKioskFullscreen().then(sync);
     };
-    window.addEventListener("pointerdown", restoreFullscreen, true);
+    window.addEventListener("pointerdown", onPointerDown, true);
 
     const preventMenu = (event: Event) => event.preventDefault();
     const preventKeys = (event: KeyboardEvent) => {
-      if (isDeskMode() || isPausedOn(pathname)) return;
+      if (isDeskMode() || isKioskPaused()) return;
       if (event.key === "Escape") {
         event.preventDefault();
         if (pinOpen) {
@@ -252,12 +251,12 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     return () => {
       document.removeEventListener("fullscreenchange", onChange);
       window.removeEventListener("resize", onChange);
-      window.removeEventListener("pointerdown", restoreFullscreen, true);
+      window.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("contextmenu", preventMenu);
       document.removeEventListener("dragstart", preventMenu);
       window.removeEventListener("keydown", preventKeys);
     };
-  }, [stand, pathname, sync, pinOpen, openPin]);
+  }, [stand, pathname, sync, pinOpen, openPin, resumeKiosk]);
 
   if (!stand) return <>{children}</>;
 
