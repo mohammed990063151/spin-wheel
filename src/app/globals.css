@@ -65,7 +65,7 @@ html.kiosk-mode textarea {
 .kiosk-enter {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 115;
   display: grid;
   place-items: center;
   border: 0;

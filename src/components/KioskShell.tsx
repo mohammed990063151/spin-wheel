@@ -33,8 +33,12 @@ function isDeskMode() {
     sessionStorage.removeItem("spin-desk");
     return false;
   }
-  if (params.get("desk") === "1" || params.get("kiosk") === "0") return true;
-  return sessionStorage.getItem("spin-desk") === "1";
+  if (params.get("desk") === "1" || params.get("kiosk") === "0") {
+    sessionStorage.setItem("spin-desk", "1");
+    return true;
+  }
+  sessionStorage.removeItem("spin-desk");
+  return false;
 }
 
 function hasEnteredKiosk() {
@@ -45,13 +49,16 @@ function isKioskPaused() {
   return sessionStorage.getItem(KIOSK_PAUSE) === "1";
 }
 
-function isFullscreenNow() {
+function isImmersiveDisplay() {
   return Boolean(
-    document.fullscreenElement ||
-      window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
       window.matchMedia("(display-mode: standalone)").matches ||
       (navigator as Navigator & { standalone?: boolean }).standalone,
   );
+}
+
+function isFullscreenNow() {
+  return Boolean(document.fullscreenElement || isImmersiveDisplay());
 }
 
 function isUnlockControl(target: EventTarget | null) {
@@ -152,7 +159,7 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     setDesk(false);
     setLocked(false);
     void requestKioskFullscreen().then((ok) => {
-      if (!ok) {
+      if (!ok && !isImmersiveDisplay()) {
         sessionStorage.removeItem(KIOSK_ON);
         setLocked(wantsEnterOverlay(pathname));
       }
@@ -186,7 +193,6 @@ export default function KioskShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isDeskMode()) {
-      sessionStorage.setItem("spin-desk", "1");
       setDesk(true);
       setPaused(false);
       setLocked(false);
@@ -210,10 +216,12 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     const onPointerDown = (event: Event) => {
       if (isUnlockControl(event.target) || isDeskMode()) return;
       if (isKioskPaused()) {
+        event.preventDefault();
+        event.stopPropagation();
         resumeKiosk();
         return;
       }
-      if (isFullscreenNow() || pinOpen) return;
+      if (document.fullscreenElement || pinOpen) return;
       if (!hasEnteredKiosk() && !wantsEnterOverlay(pathname)) return;
       void requestKioskFullscreen().then(sync);
     };
@@ -296,16 +304,22 @@ export default function KioskShell({ children }: { children: ReactNode }) {
           </div>
         </form>
       ) : null}
-      {!staffOff && locked ? (
+      {paused || (!desk && locked) ? (
         <button
           type="button"
           className="kiosk-enter"
-          onClick={() =>
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (isKioskPaused() || paused) {
+              resumeKiosk();
+              return;
+            }
             void requestKioskFullscreen().then((ok) => {
               if (!ok) setLocked(false);
               else sync();
-            })
-          }
+            });
+          }}
         >
           <span>{t("kiosk.enter")}</span>
         </button>
