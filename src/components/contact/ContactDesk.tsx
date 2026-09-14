@@ -455,13 +455,13 @@ export default function ContactDesk() {
               </div>
             )}
           </div>
+          {catalogQr ? (
+            <aside className="catalog-qr" aria-label={t("contact.catalogQr")}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={catalogQr} alt={t("contact.catalogQr")} />
+            </aside>
+          ) : null}
         </div>
-        {catalogQr ? (
-          <aside className="catalog-qr" aria-label={t("contact.catalogQr")}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={catalogQr} alt={t("contact.catalogQr")} />
-          </aside>
-        ) : null}
       )}
 
       {selected && (
