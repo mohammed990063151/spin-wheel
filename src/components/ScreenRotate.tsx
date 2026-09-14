@@ -29,7 +29,14 @@ export default function ScreenRotate() {
     const next = readAngle();
     setAngle(next);
     applyAngle(next);
+    const reset = () => {
+      localStorage.setItem(STORAGE, "0");
+      applyAngle(0);
+      setAngle(0);
+    };
+    window.addEventListener("spin-unlock", reset);
     return () => {
+      window.removeEventListener("spin-unlock", reset);
       delete document.documentElement.dataset.rot;
       document.documentElement.classList.remove("is-rotated");
     };

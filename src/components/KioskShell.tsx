@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import KioskNav from "@/components/KioskNav";
 import KioskQr from "@/components/KioskQr";
@@ -10,6 +10,7 @@ import { useLocale } from "@/components/LocaleProvider";
 
 const STAND_PATHS = new Set(["/", "/place", "/enala", "/contact", "/sofa", "/join", "/media"]);
 const KIOSK_ON = "spin-kiosk-on";
+const STAFF_PIN = "0000";
 
 function isStandScreen(pathname: string) {
   return STAND_PATHS.has(pathname);
@@ -68,13 +69,33 @@ async function requestKioskFullscreen() {
   }
 }
 
+async function restoreNormalScreen() {
+  sessionStorage.setItem("spin-desk", "1");
+  sessionStorage.removeItem(KIOSK_ON);
+  localStorage.setItem("spin-screen-rot", "0");
+  document.documentElement.dataset.rot = "0";
+  document.documentElement.classList.remove("is-rotated", "kiosk-mode");
+  window.dispatchEvent(new Event("spin-unlock"));
+  if (document.fullscreenElement) {
+    try {
+      await document.exitFullscreen();
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 export default function KioskShell({ children }: { children: ReactNode }) {
   const { t } = useLocale();
   const pathname = usePathname() || "/";
   const stand = isStandScreen(pathname);
   const showChrome = stand && pathname !== "/join";
+  const pinRef = useRef<HTMLInputElement>(null);
   const [desk, setDesk] = useState(false);
   const [locked, setLocked] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState(false);
 
   const sync = useCallback(() => {
     if (!stand || isDeskMode()) {
@@ -89,6 +110,36 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     const needOverlay = wantsEnterOverlay(pathname) && !isFullscreenNow() && !hasEnteredKiosk();
     setLocked(needOverlay);
   }, [stand, pathname]);
+
+  const openPin = useCallback(() => {
+    setPin("");
+    setPinError(false);
+    setPinOpen(true);
+    window.setTimeout(() => pinRef.current?.focus(), 40);
+  }, []);
+
+  const unlock = useCallback(async () => {
+    await restoreNormalScreen();
+    setPinOpen(false);
+    setPin("");
+    setPinError(false);
+    setDesk(true);
+    setLocked(false);
+  }, []);
+
+  const checkPin = useCallback(
+    (event?: FormEvent) => {
+      event?.preventDefault();
+      if (pin.trim() !== STAFF_PIN) {
+        setPinError(true);
+        setPin("");
+        pinRef.current?.focus();
+        return;
+      }
+      void unlock();
+    },
+    [pin, unlock],
+  );
 
   useEffect(() => {
     if (isDeskMode()) {
@@ -112,8 +163,9 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     document.addEventListener("fullscreenchange", onChange);
     window.addEventListener("resize", onChange);
 
-    const restoreFullscreen = () => {
-      if (isDeskMode() || isFullscreenNow()) return;
+    const restoreFullscreen = (event: Event) => {
+      if ((event.target as HTMLElement | null)?.closest(".kiosk-unlock-dot, .kiosk-pin")) return;
+      if (isDeskMode() || isFullscreenNow() || pinOpen) return;
       if (!hasEnteredKiosk() && !wantsEnterOverlay(pathname)) return;
       void requestKioskFullscreen().then(sync);
     };
@@ -121,17 +173,27 @@ export default function KioskShell({ children }: { children: ReactNode }) {
 
     const preventMenu = (event: Event) => event.preventDefault();
     const preventKeys = (event: KeyboardEvent) => {
+      if (isDeskMode()) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (pinOpen) {
+          setPinOpen(false);
+          setPin("");
+          setPinError(false);
+          return;
+        }
+        openPin();
+        return;
+      }
       const key = event.key.toLowerCase();
       const block =
         event.key === "F11" ||
         event.key === "F5" ||
-        event.key === "Escape" ||
         ((event.ctrlKey || event.metaKey) && ["t", "n", "w", "r", "l", "p"].includes(key)) ||
         (event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) ||
         (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key));
       if (!block) return;
       event.preventDefault();
-      if (event.key === "Escape") void requestKioskFullscreen().then(sync);
     };
 
     document.addEventListener("contextmenu", preventMenu);
@@ -146,7 +208,7 @@ export default function KioskShell({ children }: { children: ReactNode }) {
       document.removeEventListener("dragstart", preventMenu);
       window.removeEventListener("keydown", preventKeys);
     };
-  }, [stand, pathname, sync]);
+  }, [stand, pathname, sync, desk, pinOpen, openPin]);
 
   if (!stand) return <>{children}</>;
 
@@ -162,6 +224,29 @@ export default function KioskShell({ children }: { children: ReactNode }) {
           <KioskQr />
           <KioskNav />
         </>
+      ) : null}
+      {!desk ? (
+        <button type="button" className="kiosk-unlock-dot" aria-label={t("kiosk.unlock")} onClick={openPin} />
+      ) : null}
+      {pinOpen ? (
+        <form className="kiosk-pin" onSubmit={checkPin}>
+          <div className="kiosk-pin-card">
+            <p>{t("kiosk.pin")}</p>
+            <input
+              ref={pinRef}
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={4}
+              value={pin}
+              onChange={(event) => {
+                setPin(event.target.value.replace(/\D/g, "").slice(0, 4));
+                setPinError(false);
+              }}
+            />
+            {pinError ? <span className="kiosk-pin-error">{t("kiosk.pinError")}</span> : null}
+            <button type="submit">{t("kiosk.unlock")}</button>
+          </div>
+        </form>
       ) : null}
       {!desk && locked ? (
         <button

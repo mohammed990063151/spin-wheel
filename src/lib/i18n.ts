@@ -23,6 +23,9 @@ const ar = {
   "kiosk.enter": "اضغط للدخول إلى الشاشة الكاملة",
   "kiosk.rotate": "تدوير الشاشة",
   "kiosk.qr": "باركود الصفحة",
+  "kiosk.unlock": "تحقق",
+  "kiosk.pin": "أدخل الرمز",
+  "kiosk.pinError": "الرمز غير صحيح",
 
   "header.nav": "الألعاب",
   "header.sofa": "اصنع كنبتك",
@@ -240,6 +243,9 @@ const en: Record<keyof typeof ar, string> = {
   "kiosk.enter": "Tap to enter full screen",
   "kiosk.rotate": "Rotate screen",
   "kiosk.qr": "Page barcode",
+  "kiosk.unlock": "Verify",
+  "kiosk.pin": "Enter code",
+  "kiosk.pinError": "Incorrect code",
 
   "header.nav": "Games",
   "header.sofa": "Build your sofa",
