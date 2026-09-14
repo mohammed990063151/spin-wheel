@@ -21,6 +21,8 @@ const ar = {
   "meta.title": "عجلة الحظ | Place × Enala",
   "meta.description": "مسابقة عجلة الحظ — فنادق إناله ومصنع Place",
   "kiosk.enter": "اضغط للدخول إلى الشاشة الكاملة",
+  "kiosk.rotate": "تدوير الشاشة",
+  "kiosk.qr": "باركود الصفحة",
 
   "header.nav": "الألعاب",
   "header.sofa": "اصنع كنبتك",
@@ -34,14 +36,15 @@ const ar = {
   "nav.enala": "إناله",
   "nav.place": "Place",
   "nav.sofa": "الكنبة",
+  "nav.media": "العرض",
   "nav.contact": "التسجيل",
 
   "home.kicker": "PLACE × ENALA — INDEX 2026",
   "home.title": "مسابقة عجلة الحظ",
   "home.lead": "اختر الشاشة التفاعلية ثم سجّل بالاسم والجوال ولف العجلة",
-  "home.enala.badge": "الجائزة الكبرى · منتجع وليلة فندق",
+  "home.enala.badge": "الجائزة الكبرى · ليلة منتجع وليلة فندق و1000 ريال",
   "home.enala.title": "فنادق إناله",
-  "home.enala.prizes": "منتجع · فندق · 1000 ريال · خصم 20% · خصم 50%",
+  "home.enala.prizes": "ليلة في المنتجع · ليلة في فندق · 1000 ريال بالمحفظة · خصم 20% · خصم 50%",
   "home.enala.cta": "دخول عجلة إناله",
   "home.place.badge": "أثاث فاخر · كرسي ولوحة وتصميم",
   "home.place.title": "مصنع الأثاث",
@@ -62,9 +65,9 @@ const ar = {
   "spin.wheelLabel": "عجلة الجوائز",
 
   "prize.congrats": "مبروك {name}",
-  "prize.betterLuck": "حظ أوفر {name}",
+  "prize.betterLuck": "هديتك من البوث {name}",
   "prize.won": "ربحت",
-  "prize.missed": "لم تربح",
+  "prize.missed": "ربحت",
   "prize.next": "عميل جديد",
 
   "auth.eyebrow": "بالجوال",
@@ -202,6 +205,7 @@ const ar = {
   "contact.catalogEmpty": "لا توجد منتجات للعرض حالياً",
   "contact.catalogError": "تعذر جلب المنتجات",
   "contact.catalogClose": "إغلاق المعرض",
+  "contact.catalogQr": "باركود المعرض",
   "contact.catalogAll": "الكل",
   "contact.catalogSearch": "ابحث عن قطعة...",
   "contact.catalogCount": "{n} قطعة",
@@ -217,12 +221,25 @@ const ar = {
   "join.submit": "إرسال",
   "join.success": "شكراً لك — تم استلام بياناتك",
   "join.again": "تسجيل آخر",
+
+  "media.kicker": "شاشة العرض",
+  "media.title": "صور وفيديو",
+  "media.lead": "ارفع صورة أو فيديو ثم اضغط للعرض المباشر",
+  "media.upload": "رفع صورة أو فيديو",
+  "media.uploading": "جاري الرفع...",
+  "media.empty": "لا توجد ملفات بعد — ارفع أول صورة أو فيديو",
+  "media.image": "صورة",
+  "media.video": "فيديو",
+  "media.delete": "حذف",
+  "media.close": "إغلاق",
 } as const;
 
 const en: Record<keyof typeof ar, string> = {
   "meta.title": "Spin the Wheel | Place × Enala",
   "meta.description": "Spin-the-wheel prize draw — Enala hotels and Place furniture",
   "kiosk.enter": "Tap to enter full screen",
+  "kiosk.rotate": "Rotate screen",
+  "kiosk.qr": "Page barcode",
 
   "header.nav": "Games",
   "header.sofa": "Build your sofa",
@@ -236,6 +253,7 @@ const en: Record<keyof typeof ar, string> = {
   "nav.enala": "Enala",
   "nav.place": "Place",
   "nav.sofa": "Sofa",
+  "nav.media": "Display",
   "nav.contact": "Check-in",
 
   "home.kicker": "PLACE × ENALA — INDEX 2026",
@@ -243,7 +261,7 @@ const en: Record<keyof typeof ar, string> = {
   "home.lead": "Pick a screen, register with your name and mobile, then spin",
   "home.enala.badge": "Grand prize · Resort stay & hotel night",
   "home.enala.title": "Enala Hotels",
-  "home.enala.prizes": "Resort · Hotel · SAR 1000 · 20% off · 50% off",
+  "home.enala.prizes": "Resort night · Hotel night · SAR 1000 wallet · 20% off · 50% off",
   "home.enala.cta": "Enter Enala wheel",
   "home.place.badge": "Luxury furniture · Chair, art & design",
   "home.place.title": "Furniture factory",
@@ -264,9 +282,9 @@ const en: Record<keyof typeof ar, string> = {
   "spin.wheelLabel": "Prize wheel",
 
   "prize.congrats": "Congrats {name}",
-  "prize.betterLuck": "Better luck {name}",
+  "prize.betterLuck": "Your booth gift {name}",
   "prize.won": "You won",
-  "prize.missed": "No prize this time",
+  "prize.missed": "You won",
   "prize.next": "Next guest",
 
   "auth.eyebrow": "Mobile",
@@ -404,6 +422,7 @@ const en: Record<keyof typeof ar, string> = {
   "contact.catalogEmpty": "No products to show yet",
   "contact.catalogError": "Could not load products",
   "contact.catalogClose": "Close catalog",
+  "contact.catalogQr": "Catalog barcode",
   "contact.catalogAll": "All",
   "contact.catalogSearch": "Search a piece...",
   "contact.catalogCount": "{n} pieces",
@@ -419,6 +438,17 @@ const en: Record<keyof typeof ar, string> = {
   "join.submit": "Submit",
   "join.success": "Thank you — we received your details",
   "join.again": "Register another",
+
+  "media.kicker": "Display screen",
+  "media.title": "Photos & video",
+  "media.lead": "Upload an image or video, then tap to play it live",
+  "media.upload": "Upload image or video",
+  "media.uploading": "Uploading...",
+  "media.empty": "No files yet — upload the first image or video",
+  "media.image": "Image",
+  "media.video": "Video",
+  "media.delete": "Delete",
+  "media.close": "Close",
 };
 
 export const messages = { ar, en };

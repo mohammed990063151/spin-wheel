@@ -51,6 +51,14 @@ function round(n: number) {
   return Math.round(n * 1000) / 1000;
 }
 
+function wheelLabelLines(text: string) {
+  const parts = text.trim().split(/\s+/);
+  if (parts.length <= 2) return [text];
+  if (parts.length === 3) return [`${parts[0]} ${parts[1]}`, parts[2]];
+  const mid = Math.ceil(parts.length / 2);
+  return [parts.slice(0, mid).join(" "), parts.slice(mid).join(" ")];
+}
+
 const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel(
   { prizes, userName, onWin, disabled = false, onRequestSpin },
   ref,
@@ -150,7 +158,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
   const cy = size / 2;
   const radius = size / 2 - 8;
   const angle = segmentAngle(prizes);
-  const labelSize = prizes.length > 8 ? 11 : prizes.length > 4 ? 13 : 12;
+  const labelSize = prizes.length > 8 ? 10 : 11;
 
   const segments = prizes.map((prize, i) => {
     const startAngle = (i * angle - 90) * (Math.PI / 180);
@@ -262,9 +270,17 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
                     fontSize={labelSize}
                     fontWeight="700"
                     fontFamily="var(--font-cairo), sans-serif"
-                    style={{ letterSpacing: "0.02em" }}
+                    style={{ letterSpacing: "0.01em" }}
                   >
-                    {prizeWheelLabel(prize, locale)}
+                    {wheelLabelLines(prizeWheelLabel(prize, locale)).map((line, lineIndex, lines) => (
+                      <tspan
+                        key={line}
+                        x="0"
+                        dy={lineIndex === 0 ? `${-((lines.length - 1) * 0.55)}em` : "1.15em"}
+                      >
+                        {line}
+                      </tspan>
+                    ))}
                   </text>
                 </g>
               </g>

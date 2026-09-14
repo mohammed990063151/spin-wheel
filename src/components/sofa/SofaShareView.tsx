@@ -5,9 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "@/components/LocaleProvider";
 import type { SofaCanvasHandle } from "@/components/sofa/SofaCanvas";
 import {
-  estimateSofaPrice,
-  formatSar,
-  sofaStyleTag,
+ydv hg  sofaStyleTag,
   sofaSummary,
   type SofaConfig,
 } from "@/lib/sofa";
@@ -27,7 +25,6 @@ export default function SofaShareView({
   const { locale, t } = useLocale();
   const canvasRef = useRef<SofaCanvasHandle | null>(null);
   const [busy, setBusy] = useState(false);
-  const price = useMemo(() => estimateSofaPrice(config), [config]);
   const style = useMemo(() => sofaStyleTag(config, locale), [config, locale]);
   const summary = useMemo(() => sofaSummary(config, locale), [config, locale]);
 
@@ -66,7 +63,6 @@ export default function SofaShareView({
             }}
           />
           <div className="studio-price">
-            <strong>{formatSar(price, locale)}</strong>
             <span>{style}</span>
           </div>
         </div>

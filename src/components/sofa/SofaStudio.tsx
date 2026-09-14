@@ -13,8 +13,6 @@ import {
   LEG_OPTIONS,
   PILLOW_OPTIONS,
   SEAT_OPTIONS,
-  estimateSofaPrice,
-  formatSar,
   localizedLabel,
   sofaStyleTag,
   sofaSummary,
@@ -82,7 +80,6 @@ export default function SofaStudio() {
     setUser(loadPlaySession("sofa"));
   }, []);
 
-  const price = useMemo(() => estimateSofaPrice(config), [config]);
   const summary = useMemo(() => sofaSummary(config, locale), [config, locale]);
   const style = useMemo(() => sofaStyleTag(config, locale), [config, locale]);
 
@@ -149,7 +146,6 @@ export default function SofaStudio() {
           <div className="studio-badge">{t("sofa.badge")}</div>
           <SofaCanvas config={config} autoRotate={!showQr} />
           <div className="studio-price">
-            <strong>{formatSar(price, locale)}</strong>
             <span>{style}</span>
           </div>
         </div>

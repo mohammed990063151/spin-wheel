@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import KioskNav from "@/components/KioskNav";
+import KioskQr from "@/components/KioskQr";
 import LangSwitch from "@/components/LangSwitch";
+import ScreenRotate from "@/components/ScreenRotate";
 import { useLocale } from "@/components/LocaleProvider";
 
-const STAND_PATHS = new Set(["/", "/place", "/enala", "/contact", "/sofa", "/join"]);
+const STAND_PATHS = new Set(["/", "/place", "/enala", "/contact", "/sofa", "/join", "/media"]);
 const KIOSK_ON = "spin-kiosk-on";
 
 function isStandScreen(pathname: string) {
@@ -149,13 +151,15 @@ export default function KioskShell({ children }: { children: ReactNode }) {
   if (!stand) return <>{children}</>;
 
   return (
-    <>
+    <div className="kiosk-stage">
       {children}
+      <ScreenRotate />
       {showChrome ? (
         <>
           <div className="kiosk-lang">
             <LangSwitch />
           </div>
+          <KioskQr />
           <KioskNav />
         </>
       ) : null}
@@ -173,6 +177,6 @@ export default function KioskShell({ children }: { children: ReactNode }) {
           <span>{t("kiosk.enter")}</span>
         </button>
       ) : null}
-    </>
+    </div>
   );
 }

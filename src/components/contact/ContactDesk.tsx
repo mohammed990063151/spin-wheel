@@ -32,6 +32,7 @@ export default function ContactDesk() {
   const [joinQr, setJoinQr] = useState("");
   const [joinUrl, setJoinUrl] = useState("");
 
+  const [catalogQr, setCatalogQr] = useState("");
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [products, setProducts] = useState<AffProduct[]>([]);
   const [categories, setCategories] = useState<AffProductCategory[]>([]);
@@ -53,6 +54,18 @@ export default function ContactDesk() {
       color: { dark: "#333333", light: "#f7f6f2" },
       errorCorrectionLevel: "M",
     }).then(setJoinQr);
+
+    const catalogUrl = `${origin}/contact?catalog=1`;
+    void QRCode.toDataURL(catalogUrl, {
+      width: 160,
+      margin: 1,
+      color: { dark: "#2a2418", light: "#ffffff" },
+      errorCorrectionLevel: "M",
+    }).then(setCatalogQr);
+
+    if (new URLSearchParams(window.location.search).get("catalog") === "1") {
+      setCatalogOpen(true);
+    }
   }, []);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
@@ -443,6 +456,12 @@ export default function ContactDesk() {
             )}
           </div>
         </div>
+        {catalogQr ? (
+          <aside className="catalog-qr" aria-label={t("contact.catalogQr")}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={catalogQr} alt={t("contact.catalogQr")} />
+          </aside>
+        ) : null}
       )}
 
       {selected && (
