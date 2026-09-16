@@ -21,12 +21,28 @@ export async function notifyWin(input: {
   prizeDescription?: string;
 }) {
   await Promise.all([
-    sendGuestSms(
-      input.phone,
-      `مبروك ${input.name} ربحت ${input.prizeLabel} من ${input.brandName}`,
-    ),
-    notifySpinWin(input),
+    sendGuestSms(input.phone, winSms(input)),
+    notifySpinWin({
+      ...input,
+      prizeDescription: input.prizeDescription || winSms(input),
+    }),
   ]);
+}
+
+function winSms(input: {
+  name: string;
+  brand: string;
+  brandName: string;
+  prizeId: string;
+  prizeLabel: string;
+}) {
+  if (input.brand === "enala" && input.prizeId === "wallet_1000") {
+    return `مبروك ${input.name} ربحت 1000 ريال بالمحفظة من إناله. ادخل موقع enala.sa ثم أدخل كود الربح ehg1000`;
+  }
+  if (input.brand === "enala") {
+    return `مبروك ${input.name} ربحت ${input.prizeLabel} من إناله. ادخل موقع enala.sa لاستلام هديتك`;
+  }
+  return `مبروك ${input.name} ربحت ${input.prizeLabel} من ${input.brandName}`;
 }
 
 export async function notifySofaSaved(input: { name: string; phone: string }) {

@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useLocale } from "@/components/LocaleProvider";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
 import CitySearchField from "@/components/contact/CitySearchField";
+import { useKeyboardSafeField } from "@/lib/use-keyboard-safe-field";
 
 type ClientType = "individuals" | "companies" | "";
 type Entity = "ehg" | "place" | "treeline" | "";
@@ -20,11 +21,13 @@ const emptyForm = {
 
 export default function JoinDesk() {
   const { locale, t } = useLocale();
+  const formRef = useRef<HTMLFormElement>(null);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [shake, setShake] = useState(false);
+  useKeyboardSafeField(formRef);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
     setForm((prev) => {
@@ -109,7 +112,7 @@ export default function JoinDesk() {
             </button>
           </div>
         ) : (
-          <form className={`form-panel join-form ${shake ? "shake" : ""}`} onSubmit={submit}>
+          <form ref={formRef} className={`form-panel join-form ${shake ? "shake" : ""}`} onSubmit={submit}>
             <div className="form-field">
               <label htmlFor="join-name">{t("contact.name")} *</label>
               <input

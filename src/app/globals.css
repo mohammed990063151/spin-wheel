@@ -2013,7 +2013,9 @@ html[dir="rtl"] .form-field select {
   html.has-kiosk-nav .studio-page.contact-page {
     height: 100%;
     min-height: 100%;
-    overflow: hidden;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--kb-inset, 0px) + env(safe-area-inset-bottom, 0px));
   }
 
   .studio-shell {
@@ -2094,6 +2096,11 @@ html[dir="rtl"] .form-field select {
   box-shadow: 0 16px 36px rgba(195, 167, 134, 0.42);
 }
 
+.contact-enala-launch {
+  min-height: 56px;
+  padding-inline: 1.4rem;
+}
+
 .contact-intro-actions {
   display: flex;
   flex-wrap: wrap;
@@ -2143,7 +2150,18 @@ html[dir="rtl"] .form-field select {
   height: auto;
   max-height: 100%;
   overflow: auto;
+  padding-bottom: calc(0.4rem + var(--kb-inset, 0px));
+  scroll-padding-bottom: calc(7rem + var(--kb-inset, 0px) + env(safe-area-inset-bottom, 0px));
   animation: fade-up 0.9s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.contact-notes-field {
+  scroll-margin-bottom: calc(8.5rem + var(--kb-inset, 0px) + env(safe-area-inset-bottom, 0px));
+}
+
+.contact-notes-field textarea {
+  min-height: 5.5rem;
+  resize: vertical;
 }
 
 .contact-grid {
@@ -2362,6 +2380,17 @@ html[dir="rtl"] .form-field select {
   color: var(--ink-muted);
 }
 
+.catalog-group {
+  margin-bottom: 1.6rem;
+}
+
+.catalog-group-title {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  color: var(--gold-bright);
+}
+
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -2545,8 +2574,11 @@ html[dir="rtl"] .form-field select {
   min-height: 520px;
   background:
     radial-gradient(circle at 50% 45%, #ffffff 0%, #f7f6f2 60%, #deddd3 100%);
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
   padding: 1.5rem;
 }
 
@@ -2560,6 +2592,39 @@ html[dir="rtl"] .form-field select {
   max-height: 560px;
   object-fit: contain;
   animation: catalog-float 6s ease-in-out infinite;
+}
+
+.catalog-detail-thumbs {
+  display: flex;
+  gap: 0.4rem;
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.2rem 0.1rem 0.15rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.catalog-detail-thumbs button {
+  flex: 0 0 auto;
+  width: 68px;
+  height: 52px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f7f6f2;
+  cursor: pointer;
+}
+
+.catalog-detail-thumbs button.is-on {
+  border-color: var(--gold-bright);
+}
+
+.catalog-detail-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: none;
+  max-height: none;
 }
 
 .catalog-detail-copy {
@@ -2767,6 +2832,8 @@ html[dir="rtl"] .form-field select {
 .join-form,
 .join-success {
   margin-top: 1rem;
+  padding-bottom: calc(0.5rem + var(--kb-inset, 0px));
+  scroll-padding-bottom: calc(6rem + var(--kb-inset, 0px));
 }
 
 .join-success {
@@ -2898,6 +2965,17 @@ html[dir="rtl"] .form-field select {
 
   .contact-qr-panel {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .contact-form {
+    overflow: visible;
+    max-height: none;
+    padding-bottom: calc(1.2rem + var(--kb-inset, 0px));
+  }
+
+  .contact-shell {
+    max-height: none;
+    padding-bottom: calc(1.5rem + var(--kb-inset, 0px));
   }
 }
 

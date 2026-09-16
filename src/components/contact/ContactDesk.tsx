@@ -1,12 +1,14 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import QRCode from "qrcode";
 import { useLocale } from "@/components/LocaleProvider";
 import type { AffProduct, AffProductCategory } from "@/lib/aff";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
 import CitySearchField from "@/components/contact/CitySearchField";
+import EnalaCatalog from "@/components/contact/EnalaCatalog";
+import { useKeyboardSafeField } from "@/lib/use-keyboard-safe-field";
 
 type ClientType = "individuals" | "companies" | "";
 type Entity = "ehg" | "place" | "treeline" | "";
@@ -32,8 +34,13 @@ export default function ContactDesk() {
   const [joinQr, setJoinQr] = useState("");
   const [joinUrl, setJoinUrl] = useState("");
 
+  const formRef = useRef<HTMLFormElement>(null);
   const [catalogQr, setCatalogQr] = useState("");
+  const [enalaCatalogQr, setEnalaCatalogQr] = useState("");
   const [catalogOpen, setCatalogOpen] = useState(false);
+  const [enalaCatalogOpen, setEnalaCatalogOpen] = useState(false);
+
+  useKeyboardSafeField(formRef);
   const [products, setProducts] = useState<AffProduct[]>([]);
   const [categories, setCategories] = useState<AffProductCategory[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(false);
@@ -47,7 +54,7 @@ export default function ContactDesk() {
     const origin =
       process.env.NEXT_PUBLIC_SHARE_ORIGIN?.replace(/\/$/, "") || window.location.origin;
     const url = `${origin}/join`;
-    setJoinUrl(url);
+    queueMicrotask(() => setJoinUrl(url));
     void QRCode.toDataURL(url, {
       width: 420,
       margin: 1,
@@ -63,9 +70,19 @@ export default function ContactDesk() {
       errorCorrectionLevel: "M",
     }).then(setCatalogQr);
 
-    if (new URLSearchParams(window.location.search).get("catalog") === "1") {
-      setCatalogOpen(true);
-    }
+    const enalaUrl = `${origin}/contact?catalog=enala`;
+    void QRCode.toDataURL(enalaUrl, {
+      width: 160,
+      margin: 1,
+      color: { dark: "#2a2418", light: "#ffffff" },
+      errorCorrectionLevel: "M",
+    }).then(setEnalaCatalogQr);
+
+    const catalogParam = new URLSearchParams(window.location.search).get("catalog");
+    queueMicrotask(() => {
+      if (catalogParam === "enala") setEnalaCatalogOpen(true);
+      else if (catalogParam === "1") setCatalogOpen(true);
+    });
   }, []);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
@@ -204,6 +221,13 @@ export default function ContactDesk() {
             <button type="button" className="cta-btn contact-catalog-launch" onClick={() => setCatalogOpen(true)}>
               {t("contact.catalogBtn")}
             </button>
+            <button
+              type="button"
+              className="ghost-btn contact-enala-launch"
+              onClick={() => setEnalaCatalogOpen(true)}
+            >
+              {t("contact.enalaCatalogBtn")}
+            </button>
             <Link className="ghost-btn" href="/join" prefetch>
               {t("contact.joinLink")}
             </Link>
@@ -226,7 +250,7 @@ export default function ContactDesk() {
           </div>
         </div>
 
-        <form className={`form-panel contact-form ${shake ? "shake" : ""}`} onSubmit={submit}>
+        <form ref={formRef} className={`form-panel contact-form ${shake ? "shake" : ""}`} onSubmit={submit}>
           <div className="contact-grid">
             <div className="form-field">
               <label htmlFor="contact-name">{t("contact.name")} *</label>
@@ -328,14 +352,21 @@ export default function ContactDesk() {
             </div>
           </fieldset>
 
-          <div className="form-field">
+          <div className="form-field contact-notes-field">
             <label htmlFor="contact-notes">{t("contact.notes")}</label>
             <textarea
               id="contact-notes"
               rows={3}
+              enterKeyHint="done"
               placeholder={t("contact.notesPlaceholder")}
               value={form.notes}
               onChange={(e) => patch("notes", e.target.value)}
+              onFocus={(event) => {
+                const field = event.currentTarget;
+                window.setTimeout(() => {
+                  field.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+                }, 280);
+              }}
             />
           </div>
 
@@ -495,6 +526,8 @@ export default function ContactDesk() {
           </div>
         </div>
       )}
+
+      <EnalaCatalog open={enalaCatalogOpen} qr={enalaCatalogQr} onClose={() => setEnalaCatalogOpen(false)} />
     </main>
   );
 }

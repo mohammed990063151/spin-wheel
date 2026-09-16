@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { affCompleteSpin, affPrizeStock, clientMeta } from "@/lib/aff";
 import { isValidPhone, normalizePhone } from "@/lib/phone";
-import { applyPrizeStock, emptyPrize, getBrand, isBrandId } from "@/lib/prizes";
+import { applyPrizeStock, emptyPrize, getBrand, isBrandId, isPrizeWinnable } from "@/lib/prizes";
 import { isDevPhone } from "@/lib/dev";
 import { notifyWin } from "@/lib/guest-notify";
 
@@ -41,8 +41,9 @@ export async function POST(request: Request) {
   const livePrizes = applyPrizeStock(brandConfig.prizes, stock?.counts ?? {});
   const requested = livePrizes.find((prize) => prize.id === prizeId);
   const fallback = emptyPrize(livePrizes);
+  const blocked = Boolean(requested && !isPrizeWinnable(requested) && !requested.empty);
   const exhausted = Boolean(requested?.exhausted) && !prizeEmpty;
-  const awarded = exhausted && fallback ? fallback : null;
+  const awarded = (exhausted || blocked) && fallback ? fallback : null;
   const savedPrizeId = awarded?.id ?? prizeId;
   const savedPrizeLabel = awarded?.label ?? prizeLabel;
   const savedPrizeDescription = awarded?.description ?? prizeDescription;
