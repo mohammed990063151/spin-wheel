@@ -36,10 +36,9 @@ export async function GET(request: Request) {
 
   if (url.searchParams.get("types") === "1") {
     const result = await enalaCatalogTypes();
-  if (!result?.success && !result?.ok) {
-    console.error("[enala] catalog list unavailable");
-    return NextResponse.json({ ok: false, data: [], items: [], message: "enala unavailable" }, { status: 502 });
-  }
+    if (!result?.success && !result?.ok) {
+      return NextResponse.json({ ok: false, data: [], message: "enala unavailable" }, { status: 502 });
+    }
     return NextResponse.json({ ok: true, data: result.data ?? [] }, { headers });
   }
 
@@ -61,10 +60,7 @@ export async function GET(request: Request) {
     (await enalaLegacyCatalogList({ kind: params.kind, q: params.q }));
 
   if (!result?.success && !result?.ok) {
-    console.error("[enala] catalog list empty", {
-      url: enalaBaseSafe(),
-      hasKey: Boolean(process.env.ENALA_API_KEY || process.env.ENALA_CATALOG_API_KEY),
-    });
+    console.error("[enala] catalog list unavailable");
     return NextResponse.json({ ok: false, data: [], items: [], message: "enala unavailable" }, { status: 502 });
   }
 
