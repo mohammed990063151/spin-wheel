@@ -93,15 +93,22 @@ function enalaBase() {
 }
 
 function enalaKey() {
-  return process.env.ENALA_API_KEY || process.env.ENALA_CATALOG_API_KEY || "";
+  return (process.env.ENALA_API_KEY || process.env.ENALA_CATALOG_API_KEY || "").trim();
 }
 
 export function isEnalaCatalogEnabled() {
   return Boolean(enalaBase() && enalaKey());
 }
 
+const LIST_CACHE_TTL_MS = 180_000;
+const listMemory = new Map<string, { at: number; data: CatalogListResponse }>();
+const showMemory = new Map<string, { at: number; data: CatalogListResponse }>();
+
 async function enalaRequest<T>(path: string): Promise<T | null> {
-  if (!isEnalaCatalogEnabled()) return null;
+  if (!isEnalaCatalogEnabled()) {
+    console.error("[enala] missing API URL or key");
+    return null;
+  }
   const url = `${enalaBase()}${path.startsWith("/") ? path : `/${path}`}`;
   try {
     const res = await fetch(url, {
@@ -111,9 +118,12 @@ async function enalaRequest<T>(path: string): Promise<T | null> {
         "X-Enala-Catalog-Key": enalaKey(),
       },
       cache: "no-store",
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(45_000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error("[enala] API request failed", { path, status: res.status });
+      return null;
+    }
     return (await res.json()) as T;
   } catch (error) {
     console.error("[enala] API request failed", { path, error });
@@ -144,12 +154,41 @@ export async function enalaCatalogList(params: {
   if (params.with_rooms === false) query.set("with_rooms", "0");
   if (params.page) query.set("page", String(params.page));
   if (params.per_page) query.set("per_page", String(params.per_page));
-  const suffix = query.toString() ? `?${query}` : "";
-  return enalaFetch(`/v1/catalog${suffix}`);
+  const cacheKey = query.toString();
+  const hit = listMemory.get(cacheKey);
+  if (hit && Date.now() - hit.at < LIST_CACHE_TTL_MS) return hit.data;
+  const suffix = cacheKey ? `?${cacheKey}` : "";
+  const data = await enalaFetch(`/v1/catalog${suffix}`);
+  if (data) listMemory.set(cacheKey, { at: Date.now(), data });
+  return data;
 }
 
 export async function enalaCatalogShow(id: number) {
-  return enalaFetch(`/v1/catalog/${id}`);
+  const key = String(id);
+  const hit = showMemory.get(key);
+  if (hit && Date.now() - hit.at < LIST_CACHE_TTL_MS) return hit.data;
+  const data = await enalaFetch(`/v1/catalog/${id}`);
+  if (data) showMemory.set(key, { at: Date.now(), data });
+  return data;
+}
+
+export function slimCatalogItem(item: EnalaCatalogItem): EnalaCatalogItem {
+  const cover = item.banner_url || item.images?.[0]?.url || null;
+  return {
+    id: item.id,
+    kind: item.kind,
+    arname: item.arname,
+    enname: item.enname,
+    slug: item.slug,
+    araddress: item.araddress,
+    enaddress: item.enaddress,
+    url: item.url,
+    banner_url: cover,
+    images: cover ? [{ id: `cover-${item.id}`, url: cover, role: "banner" }] : [],
+    image_count: item.image_count || item.images?.length || 0,
+    location: item.location ?? null,
+    type: item.type ?? null,
+  };
 }
 
 export async function enalaLegacyCatalogList(params: {

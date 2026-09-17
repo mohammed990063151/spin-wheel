@@ -7,7 +7,9 @@ import { useLocale } from "@/components/LocaleProvider";
 import type { AffProduct, AffProductCategory } from "@/lib/aff";
 import { isValidPhone, normalizePhone, toAsciiDigits } from "@/lib/phone";
 import CitySearchField from "@/components/contact/CitySearchField";
+import CatalogImage, { CATALOG_DETAIL_SIZES, CATALOG_LIST_SIZES } from "@/components/contact/CatalogImage";
 import EnalaCatalog from "@/components/contact/EnalaCatalog";
+import { prefetchEnalaCatalog } from "@/components/contact/enala-catalog-cache";
 import { useKeyboardSafeField } from "@/lib/use-keyboard-safe-field";
 
 type ClientType = "individuals" | "companies" | "";
@@ -83,6 +85,7 @@ export default function ContactDesk() {
       if (catalogParam === "enala") setEnalaCatalogOpen(true);
       else if (catalogParam === "1") setCatalogOpen(true);
     });
+    prefetchEnalaCatalog();
   }, []);
 
   const patch = <K extends keyof typeof emptyForm>(key: K, value: (typeof emptyForm)[K]) => {
@@ -396,54 +399,56 @@ export default function ContactDesk() {
       {catalogOpen && (
         <div className="catalog-overlay" role="dialog" aria-modal="true" aria-labelledby="catalog-title">
           <div className="catalog-stage">
-            <header className="catalog-header">
-              <div>
-                <p className="studio-kicker">PLACE ATELIER</p>
-                <h2 id="catalog-title">{t("contact.catalogTitle")}</h2>
-                <p className="catalog-lead">{t("contact.catalogLead")}</p>
-              </div>
-              <button type="button" className="ghost-btn" onClick={() => setCatalogOpen(false)}>
-                {t("contact.catalogClose")}
-              </button>
-            </header>
-
-            <div className="catalog-toolbar">
-              <input
-                className="catalog-search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("contact.catalogSearch")}
-              />
-              <span className="catalog-count">{t("contact.catalogCount", { n: catalogTotal })}</span>
-            </div>
-
-            <div className="catalog-filters">
-              <button
-                type="button"
-                className={`catalog-filter ${activeCategory == null ? "is-on" : ""}`}
-                onClick={() => setActiveCategory(null)}
-              >
-                {t("contact.catalogAll")}
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  className={`catalog-filter ${activeCategory === category.id ? "is-on" : ""}`}
-                  onClick={() => setActiveCategory(category.id)}
-                >
-                  {locale === "en" ? category.enname || category.arname : category.arname || category.enname}
+            <div className="catalog-chrome">
+              <header className="catalog-header">
+                <div>
+                  <p className="studio-kicker">PLACE ATELIER</p>
+                  <h2 id="catalog-title">{t("contact.catalogTitle")}</h2>
+                  <p className="catalog-lead">{t("contact.catalogLead")}</p>
+                </div>
+                <button type="button" className="ghost-btn catalog-close" onClick={() => setCatalogOpen(false)}>
+                  {t("contact.catalogClose")}
                 </button>
-              ))}
+              </header>
+
+              <div className="catalog-toolbar">
+                <input
+                  className="catalog-search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("contact.catalogSearch")}
+                />
+                <span className="catalog-count">{t("contact.catalogCount", { n: catalogTotal })}</span>
+              </div>
+
+              <div className="catalog-filters">
+                <button
+                  type="button"
+                  className={`catalog-filter ${activeCategory == null ? "is-on" : ""}`}
+                  onClick={() => setActiveCategory(null)}
+                >
+                  {t("contact.catalogAll")}
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    className={`catalog-filter ${activeCategory === category.id ? "is-on" : ""}`}
+                    onClick={() => setActiveCategory(category.id)}
+                  >
+                    {locale === "en" ? category.enname || category.arname : category.arname || category.enname}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {catalogLoading ? (
               <div className="catalog-masonry" aria-busy="true">
-                {Array.from({ length: 6 }).map((_, index) => (
+                {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
-                    className={`catalog-tile catalog-skeleton ${index === 0 ? "is-featured" : ""}`}
-                    style={{ animationDelay: `${index * 70}ms` }}
+                    className="catalog-tile catalog-skeleton"
+                    style={{ animationDelay: `${index * 60}ms` }}
                   />
                 ))}
               </div>
@@ -455,19 +460,23 @@ export default function ContactDesk() {
               <div className="catalog-masonry">
                 {products.map((product, index) => {
                   const image = product.photo_url || product.photo_alt_url || product.gallery?.[0]?.url || "";
-                  const featured = index % 7 === 0;
                   return (
                     <button
                       key={product.id}
                       type="button"
-                      className={`catalog-tile ${featured ? "is-featured" : ""}`}
-                      style={{ animationDelay: `${Math.min(index, 16) * 55}ms` }}
+                      className="catalog-tile"
+                      style={{ animationDelay: `${Math.min(index, 12) * 45}ms` }}
                       onClick={() => setSelected(product)}
                     >
                       <div className="catalog-tile-media">
                         {image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={image} alt={productTitle(product)} loading="lazy" decoding="async" />
+                          <CatalogImage
+                            src={image}
+                            alt={productTitle(product)}
+                            sizes={CATALOG_LIST_SIZES}
+                            priority={index < 4}
+                            quality={82}
+                          />
                         ) : (
                           <div className="catalog-card-fallback" />
                         )}
@@ -505,11 +514,20 @@ export default function ContactDesk() {
           />
           <div className="catalog-detail-card catalog-detail-card-wide">
             <div className="catalog-detail-media">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={selected.photo_url || selected.photo_alt_url || selected.gallery?.[0]?.url || ""}
-                alt={productTitle(selected)}
-              />
+              <div className="catalog-detail-photo">
+                {selected.photo_url || selected.photo_alt_url || selected.gallery?.[0]?.url ? (
+                  <CatalogImage
+                    src={selected.photo_url || selected.photo_alt_url || selected.gallery?.[0]?.url || ""}
+                    alt={productTitle(selected)}
+                    sizes={CATALOG_DETAIL_SIZES}
+                    priority
+                    quality={90}
+                    fit="contain"
+                  />
+                ) : (
+                  <div className="catalog-card-fallback" />
+                )}
+              </div>
             </div>
             <div className="catalog-detail-copy">
               <p className="studio-kicker">PLACE</p>
