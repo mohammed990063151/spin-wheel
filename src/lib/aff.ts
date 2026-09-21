@@ -148,6 +148,25 @@ export async function affPrizeStock(source: BrandId) {
   }
 }
 
+export async function affResetPrizeStock(source: BrandId) {
+  if (!isAffEnabled()) return { ok: true, deleted: 0 };
+  try {
+    const res = await affRequest(affUrl("/spin/customers/reset"), {
+      method: "POST",
+      body: JSON.stringify({ source }),
+    });
+    const json = (await res.json()) as {
+      ok?: boolean;
+      deleted?: number;
+      message?: string;
+    };
+    if (!res.ok || json.ok === false) return null;
+    return { ok: true, deleted: json.deleted ?? 0 };
+  } catch {
+    return null;
+  }
+}
+
 export async function affCompleteSpin(input: {
   name?: string;
   phone: string;

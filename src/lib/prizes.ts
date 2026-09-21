@@ -37,8 +37,8 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Chair",
     description: "كرسي هدية من مصنع Place",
     descriptionEn: "A complimentary chair from Place",
-    color: "#c3a786",
-    colorAlt: "#d4b896",
+    color: "#006C35",
+    colorAlt: "#0a8f4a",
     textColor: "#ffffff",
     icon: "◆",
     stock: 3,
@@ -52,9 +52,9 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Puff",
     description: "بف للتسريحة هدية من مصنع Place",
     descriptionEn: "A complimentary vanity puff from Place",
-    color: "#deddd3",
-    colorAlt: "#f7f6f2",
-    textColor: "#333333",
+    color: "#ffffff",
+    colorAlt: "#e8f5ee",
+    textColor: "#006C35",
     icon: "●",
     stock: 3,
     weight: 1,
@@ -67,8 +67,8 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Baloot",
     description: "طاولة بلوت هدية من مصنع Place",
     descriptionEn: "A complimentary baloot table from Place",
-    color: "#b8956f",
-    colorAlt: "#c3a786",
+    color: "#004d25",
+    colorAlt: "#006C35",
     textColor: "#ffffff",
     icon: "▣",
     stock: 2,
@@ -82,9 +82,9 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Art",
     description: "لوحة هدية من مصنع Place",
     descriptionEn: "A complimentary artwork from Place",
-    color: "#e8e2d4",
-    colorAlt: "#f7f6f2",
-    textColor: "#333333",
+    color: "#d4f0e0",
+    colorAlt: "#ffffff",
+    textColor: "#004d25",
     icon: "▭",
     stock: 5,
     weight: 1,
@@ -97,9 +97,9 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Design",
     description: "تصميم غرفة نوم مجاني من فريق Place",
     descriptionEn: "A free bedroom design from the Place team",
-    color: "#d4c4a8",
-    colorAlt: "#e6d9c2",
-    textColor: "#333333",
+    color: "#1a9b5c",
+    colorAlt: "#3cb371",
+    textColor: "#ffffff",
     icon: "✎",
     stock: 2,
     weight: 1,
@@ -112,9 +112,9 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Consult",
     description: "استشارة مصمم مجانية من فريق Place",
     descriptionEn: "A free designer consultation from Place",
-    color: "#c9b48a",
-    colorAlt: "#d6c49e",
-    textColor: "#2A2418",
+    color: "#e8f5ee",
+    colorAlt: "#f4fcf7",
+    textColor: "#006C35",
     icon: "✦",
     stock: 2,
     weight: 1,
@@ -127,9 +127,9 @@ export const PLACE_PRIZES: Prize[] = [
     shortLabelEn: "Luck",
     description: "حظ أوفر في المرة القادمة",
     descriptionEn: "Better luck next time",
-    color: "#ffffff",
-    colorAlt: "#f7f6f2",
-    textColor: "#999999",
+    color: "#f7faf8",
+    colorAlt: "#ffffff",
+    textColor: "#6b8575",
     icon: "–",
     empty: true,
     weight: 114,
@@ -138,61 +138,49 @@ export const PLACE_PRIZES: Prize[] = [
 
 export const ENALA_PRIZES: Prize[] = [
   {
+    id: "wallet_596",
+    label: "596 ريال بالمحفظة",
+    labelEn: "SAR 596 wallet",
+    shortLabel: "596 ريال",
+    shortLabelEn: "SAR 596",
+    description: "596 ريال تُضاف لمحفظتك — ادخل موقع enala.sa ثم أدخل كود الربح ehg596",
+    descriptionEn: "SAR 596 added to your wallet — go to enala.sa and enter prize code ehg596",
+    color: "#006C35",
+    colorAlt: "#0a8f4a",
+    textColor: "#FFFFFF",
+    icon: "﷼",
+    stock: 6,
+    weight: 6,
+  },
+  {
+    id: "wallet_1096",
+    label: "1096 ريال بالمحفظة",
+    labelEn: "SAR 1096 wallet",
+    shortLabel: "1096 ريال",
+    shortLabelEn: "SAR 1096",
+    description: "1096 ريال تُضاف لمحفظتك — ادخل موقع enala.sa ثم أدخل كود الربح ehg1096",
+    descriptionEn: "SAR 1096 added to your wallet — go to enala.sa and enter prize code ehg1096",
+    color: "#ffffff",
+    colorAlt: "#e8f5ee",
+    textColor: "#006C35",
+    icon: "﷼",
+    stock: 4,
+    weight: 4,
+  },
+  {
     id: "resort_2nights",
-    label: "ليلة في المنتجع",
-    labelEn: "1 resort night",
-    shortLabel: "ليلة في المنتجع",
+    label: "ليلة مجانية في منتجع",
+    labelEn: "Free resort night",
+    shortLabel: "ليلة منتجع",
     shortLabelEn: "Resort night",
     description: "ليلة مجانية في أحد منتجعات إناله",
     descriptionEn: "One complimentary night at an Enala resort",
-    color: "#B08D45",
-    colorAlt: "#C9A85A",
+    color: "#004d25",
+    colorAlt: "#006C35",
     textColor: "#FFFFFF",
     icon: "★",
     stock: 2,
-    weight: 0,
-  },
-  {
-    id: "wallet_1000",
-    label: "1000 ريال بالمحفظة",
-    labelEn: "SAR 1000 wallet",
-    shortLabel: "1000 ريال بالمحفظة",
-    shortLabelEn: "SAR 1000 wallet",
-    description: "1000 ريال تُضاف لمحفظتك — ادخل موقع enala.sa ثم أدخل كود الربح ehg1000",
-    descriptionEn: "SAR 1000 added to your wallet — go to enala.sa and enter prize code ehg1000",
-    color: "#C9B48A",
-    colorAlt: "#D6C49E",
-    textColor: "#2A2418",
-    icon: "﷼",
     weight: 2,
-  },
-  {
-    id: "discount20",
-    label: "خصم 20%",
-    labelEn: "20% off",
-    shortLabel: "20%",
-    shortLabelEn: "20%",
-    description: "خصم 20% على أي حجز — ادخل موقع enala.sa لاستلام الخصم",
-    descriptionEn: "20% off any booking — visit enala.sa to redeem",
-    color: "#EFE4D0",
-    colorAlt: "#F7F0E4",
-    textColor: "#2A2418",
-    icon: "٪",
-    weight: 2,
-  },
-  {
-    id: "discount50",
-    label: "خصم 50%",
-    labelEn: "50% off",
-    shortLabel: "50%",
-    shortLabelEn: "50%",
-    description: "خصم 50% على أي حجز — ادخل موقع enala.sa لاستلام الخصم",
-    descriptionEn: "50% off any booking — visit enala.sa to redeem",
-    color: "#d4b896",
-    colorAlt: "#e2c9a8",
-    textColor: "#2A2418",
-    icon: "٪",
-    weight: 1,
   },
   {
     id: "luck",
@@ -202,27 +190,28 @@ export const ENALA_PRIZES: Prize[] = [
     shortLabelEn: "Luck",
     description: "حظ أوفر في المرة القادمة",
     descriptionEn: "Better luck next time",
-    color: "#f3eee6",
-    colorAlt: "#f7f6f2",
-    textColor: "#8a8174",
+    color: "#f4fcf7",
+    colorAlt: "#ffffff",
+    textColor: "#6b8575",
     icon: "–",
     empty: true,
-    weight: 95,
+    stock: 1,
+    weight: 1,
   },
   {
     id: "hotel_2nights",
-    label: "ليلة في فندق",
-    labelEn: "1 hotel night",
-    shortLabel: "ليلة في فندق",
+    label: "ليلة مجانية في فندق",
+    labelEn: "Free hotel night",
+    shortLabel: "ليلة فندق",
     shortLabelEn: "Hotel night",
     description: "ليلة مجانية في أحد فنادق إناله",
     descriptionEn: "A complimentary night at an Enala hotel",
-    color: "#9a7a55",
-    colorAlt: "#b08d45",
+    color: "#1a9b5c",
+    colorAlt: "#3cb371",
     textColor: "#FFFFFF",
     icon: "★",
     stock: 2,
-    weight: 0,
+    weight: 2,
   },
 ];
 
@@ -262,11 +251,18 @@ export function isPrizeWinnable(prize: Prize) {
 }
 
 export function applyPrizeStock(prizes: Prize[], counts: Record<string, number>): Prize[] {
+  // Enala: every slice has stock (incl. luck) → remaining stock drives chance.
+  // Place: luck is unlimited → keep original weights, only mark exhausted gifts.
+  const finitePool = prizes.length > 0 && prizes.every((prize) => typeof prize.stock === "number");
   return prizes.map((prize) => {
     if (!prize.stock) return prize;
     const used = Number(counts[prize.id] ?? 0);
-    if (Number.isFinite(used) && used >= prize.stock) {
-      return { ...prize, exhausted: true };
+    const taken = Number.isFinite(used) ? used : 0;
+    if (taken >= prize.stock) {
+      return { ...prize, exhausted: true, weight: 0 };
+    }
+    if (finitePool) {
+      return { ...prize, weight: prize.stock - taken };
     }
     return prize;
   });
@@ -311,6 +307,18 @@ export function getPrizeAtRotation(prizes: Prize[], rotationDeg: number): Prize 
   const underPointer = normalizeAngle(360 - normalizeAngle(rotationDeg));
   const index = Math.floor(underPointer / angle) % count;
   return prizes[index];
+}
+
+export function totalPrizeStock(prizes: Prize[]) {
+  return prizes.reduce((sum, prize) => sum + (prize.stock ?? 0), 0);
+}
+
+export function usedPrizeStock(counts: Record<string, number>, prizes: Prize[]) {
+  return prizes.reduce((sum, prize) => {
+    if (!prize.stock) return sum;
+    const used = Number(counts[prize.id] ?? 0);
+    return sum + (Number.isFinite(used) ? Math.min(used, prize.stock) : 0);
+  }, 0);
 }
 
 export function rotationForPrize(

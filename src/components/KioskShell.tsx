@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import KioskNav from "@/components/KioskNav";
 import KioskQr from "@/components/KioskQr";
 import LangSwitch from "@/components/LangSwitch";
 import ScreenRotate from "@/components/ScreenRotate";
@@ -137,10 +136,10 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     if (!stand || deskNow || pausedNow) {
       setLocked(false);
       document.documentElement.classList.remove("kiosk-mode");
-      document.documentElement.classList.toggle("has-kiosk-nav", stand && pathname !== "/join");
+      document.documentElement.classList.remove("has-kiosk-nav");
       return;
     }
-    document.documentElement.classList.toggle("has-kiosk-nav", stand && pathname !== "/join");
+    document.documentElement.classList.remove("has-kiosk-nav");
     document.documentElement.classList.add("kiosk-mode");
     const needOverlay = wantsEnterOverlay(pathname) && !isFullscreenNow() && !hasEnteredKiosk();
     setLocked(needOverlay);
@@ -197,7 +196,7 @@ export default function KioskShell({ children }: { children: ReactNode }) {
       setPaused(false);
       setLocked(false);
       document.documentElement.classList.remove("kiosk-mode");
-      document.documentElement.classList.toggle("has-kiosk-nav", stand && pathname !== "/join");
+      document.documentElement.classList.remove("has-kiosk-nav");
       return;
     }
     if (!stand) {
@@ -230,7 +229,9 @@ export default function KioskShell({ children }: { children: ReactNode }) {
     const preventMenu = (event: Event) => event.preventDefault();
     const preventKeys = (event: KeyboardEvent) => {
       if (isDeskMode() || isKioskPaused()) return;
-      if (event.key === "Escape") {
+      const rawKey = typeof event.key === "string" ? event.key : "";
+      if (!rawKey) return;
+      if (rawKey === "Escape") {
         event.preventDefault();
         if (pinOpen) {
           setPinOpen(false);
@@ -241,12 +242,12 @@ export default function KioskShell({ children }: { children: ReactNode }) {
         openPin();
         return;
       }
-      const key = event.key.toLowerCase();
+      const key = rawKey.toLowerCase();
       const block =
-        event.key === "F11" ||
-        event.key === "F5" ||
+        rawKey === "F11" ||
+        rawKey === "F5" ||
         ((event.ctrlKey || event.metaKey) && ["t", "n", "w", "r", "l", "p"].includes(key)) ||
-        (event.altKey && (event.key === "ArrowLeft" || event.key === "ArrowRight")) ||
+        (event.altKey && (rawKey === "ArrowLeft" || rawKey === "ArrowRight")) ||
         (event.ctrlKey && event.shiftKey && ["i", "j", "c"].includes(key));
       if (!block) return;
       event.preventDefault();
@@ -278,7 +279,6 @@ export default function KioskShell({ children }: { children: ReactNode }) {
             <LangSwitch />
           </div>
           <KioskQr />
-          <KioskNav />
         </>
       ) : null}
       {!staffOff ? (

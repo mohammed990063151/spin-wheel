@@ -36,8 +36,11 @@ function winSms(input: {
   prizeId: string;
   prizeLabel: string;
 }) {
-  if (input.brand === "enala" && input.prizeId === "wallet_1000") {
-    return `مبروك ${input.name} ربحت 1000 ريال بالمحفظة من إناله. ادخل موقع enala.sa ثم أدخل كود الربح ehg1000`;
+  if (input.brand === "enala" && input.prizeId === "wallet_596") {
+    return `مبروك ${input.name} ربحت 596 ريال بالمحفظة من إناله. ادخل موقع enala.sa ثم أدخل كود الربح ehg596`;
+  }
+  if (input.brand === "enala" && input.prizeId === "wallet_1096") {
+    return `مبروك ${input.name} ربحت 1096 ريال بالمحفظة من إناله. ادخل موقع enala.sa ثم أدخل كود الربح ehg1096`;
   }
   if (input.brand === "enala") {
     return `مبروك ${input.name} ربحت ${input.prizeLabel} من إناله. ادخل موقع enala.sa لاستلام هديتك`;

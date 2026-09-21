@@ -92,14 +92,14 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
     const count = segmentCount(prizes);
     // Add slight random offset within segment so it doesn't always land dead-center
     const jitter = (Math.random() - 0.5) * (angle * 0.55);
-    const extraSpins = 12 + Math.floor(Math.random() * 4);
+    const extraSpins = 5 + Math.floor(Math.random() * 3);
     const target = rotationForPrize(prizes, prizeIndex, extraSpins) + jitter;
     // Continuously increase rotation (never reset) for smooth multi-spins
     const delta = target + Math.ceil(start / 360) * 360 - (start % 360);
     const minTravel = extraSpins * 360;
     const end = start + (delta < minTravel ? delta + minTravel : delta);
 
-    const duration = 14500 + Math.random() * 2500;
+    const duration = 5200 + Math.random() * 1200;
     const t0 = performance.now();
     setSpinning(true);
     setGlowPulse(true);
@@ -158,7 +158,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
   const cy = size / 2;
   const radius = size / 2 - 8;
   const angle = segmentAngle(prizes);
-  const labelSize = prizes.length > 8 ? 10 : 11;
+  const labelSize = prizes.length <= 5 ? 13 : prizes.length > 8 ? 10 : 11;
 
   const segments = prizes.map((prize, i) => {
     const startAngle = (i * angle - 90) * (Math.PI / 180);
@@ -197,18 +197,18 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
           <svg width="36" height="48" viewBox="0 0 36 48" aria-hidden>
             <defs>
               <linearGradient id="ptrGold" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#e8d4b8" />
-                <stop offset="50%" stopColor="#c3a786" />
-                <stop offset="100%" stopColor="#9a7a55" />
+                <stop offset="0%" stopColor="#3cb371" />
+                <stop offset="50%" stopColor="#006C35" />
+                <stop offset="100%" stopColor="#004d25" />
               </linearGradient>
             </defs>
             <path
               d="M18 46 C18 46 2 28 2 16 C2 7.7 9.2 1 18 1 C26.8 1 34 7.7 34 16 C34 28 18 46 18 46Z"
               fill="url(#ptrGold)"
-              stroke="#9a7a55"
+              stroke="#004d25"
               strokeWidth="1.2"
             />
-            <circle cx="18" cy="16" r="5" fill="#333333" opacity="0.28" />
+            <circle cx="18" cy="16" r="5" fill="#0b2e1a" opacity="0.35" />
           </svg>
         </div>
 
@@ -252,9 +252,9 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
                 </linearGradient>
               ))}
               <radialGradient id="hubGold" cx="40%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="#e8d4b8" />
-                <stop offset="55%" stopColor="#c3a786" />
-                <stop offset="100%" stopColor="#9a7a55" />
+                <stop offset="0%" stopColor="#3cb371" />
+                <stop offset="55%" stopColor="#006C35" />
+                <stop offset="100%" stopColor="#004d25" />
               </radialGradient>
             </defs>
 
@@ -292,7 +292,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
               cy={cy}
               r={radius}
               fill="none"
-              stroke="#c3a786"
+              stroke="#006C35"
               strokeWidth="6"
               opacity="0.95"
             />
@@ -301,16 +301,16 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
               cy={cy}
               r={radius - 5}
               fill="none"
-              stroke="#9a7a55"
+              stroke="#004d25"
               strokeWidth="1.5"
               opacity="0.55"
             />
 
             {/* Center hub */}
-            <circle cx={cx} cy={cy} r="38" fill="#deddd3" />
+            <circle cx={cx} cy={cy} r="38" fill="#e8f5ee" />
             <circle cx={cx} cy={cy} r="30" fill="url(#hubGold)" />
-            <circle cx={cx} cy={cy} r="12" fill="#333333" />
-            <circle cx={cx} cy={cy} r="5" fill="#f7f6f2" />
+            <circle cx={cx} cy={cy} r="12" fill="#0b2e1a" />
+            <circle cx={cx} cy={cy} r="5" fill="#ffffff" />
           </svg>
         </div>
         <div className="wheel-stand" aria-hidden />
@@ -333,7 +333,7 @@ const SpinWheel = forwardRef<SpinWheelHandle, SpinWheelProps>(function SpinWheel
 
       <ul className="prize-legend" aria-label={t("spin.legend")}>
         {prizes.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className={p.exhausted ? "is-exhausted" : undefined}>
             <span className="legend-dot" style={{ background: p.color }} />
             {prizeLabel(p, locale)}
           </li>
