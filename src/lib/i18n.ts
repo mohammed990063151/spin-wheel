@@ -76,6 +76,7 @@ const ar = {
   "spin.resetConfirmNo": "إلغاء",
   "spin.resetting": "جاري التصفير...",
   "spin.finished": "انتهت المحاولات الـ15 — صفّر اللعبة للبدء من جديد",
+  "spin.alreadyPlayed": "هذا الرقم لعب في المجموعة الحالية — بعد التصفير يمكنه اللعب في مجموعة جديدة",
 
   "prize.congrats": "مبروك {name}",
   "prize.betterLuck": "حظ أوفر {name}",
@@ -316,6 +317,7 @@ const en: Record<keyof typeof ar, string> = {
   "spin.resetConfirmNo": "Cancel",
   "spin.resetting": "Resetting...",
   "spin.finished": "All 15 attempts are done — reset to start a new round",
+  "spin.alreadyPlayed": "This number already played in the current group — after reset it can play in a new group",
 
   "prize.congrats": "Congrats {name}",
   "prize.betterLuck": "Better luck next time, {name}",

@@ -169,7 +169,10 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
       setNotice("");
       return true;
     }
-    if (player?.alreadySpun) return false;
+    if (player?.alreadySpun) {
+      setNotice(t("spin.alreadyPlayed"));
+      return false;
+    }
     setNotice("");
     setAuthSession((n) => n + 1);
     setShowAuth(true);
@@ -187,6 +190,14 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
       }
     }
     setShowAuth(false);
+    if (data.alreadySpun && !isDevPhone(data.phone)) {
+      userRef.current = data;
+      readyToSpinRef.current = false;
+      savePlaySession(brandId, data);
+      setUser(data);
+      setNotice(t("spin.alreadyPlayed"));
+      return;
+    }
     setPrize(null);
     setPhase("wheel");
     setShowConfetti(false);
