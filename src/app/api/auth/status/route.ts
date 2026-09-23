@@ -33,6 +33,18 @@ export async function POST(request: Request) {
 
   if (!affData?.exists) return NextResponse.json({ exists: false });
 
+  // National Day: phones may repeat — never report already_spun.
+  if (brand === "enala") {
+    return NextResponse.json({
+      exists: false,
+      already_spun: false,
+      name: "",
+      phone,
+      prize_label: null,
+      brand,
+    });
+  }
+
   return NextResponse.json({
     exists: true,
     already_spun: isDevPhone(phone) ? false : Boolean(affData.already_spun),

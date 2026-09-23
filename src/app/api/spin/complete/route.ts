@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     ...clientMeta(request),
   });
 
-  if (aff?.already_spun && !isDevPhone(phone)) {
+  if (brand !== "enala" && aff?.already_spun && !isDevPhone(phone)) {
     return NextResponse.json({
       ok: false,
       already_spun: true,

@@ -126,7 +126,8 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
 
   useEffect(() => {
     const saved = loadPlaySession(brandId);
-    if (!saved || (saved.alreadySpun && !isDevPhone(saved.phone))) return;
+    // National Day: phones may play again — ignore prior alreadySpun session flag.
+    if (!saved || (brandId !== "enala" && saved.alreadySpun && !isDevPhone(saved.phone))) return;
     if (brandId === "enala") {
       const brandPrizes = getBrand(brandId).prizes;
       const maxSpins = totalPrizeStock(brandPrizes);
@@ -165,6 +166,17 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
       setNotice("");
       return true;
     }
+    // National Day: same phone can spin again after OTP — never hard-block on alreadySpun.
+    if (brandId === "enala") {
+      if (readyToSpinRef.current && player) {
+        setNotice("");
+        return true;
+      }
+      setNotice("");
+      setAuthSession((n) => n + 1);
+      setShowAuth(true);
+      return false;
+    }
     if (readyToSpinRef.current && player && !player.alreadySpun) {
       setNotice("");
       return true;
@@ -190,7 +202,7 @@ export default function SpinApp({ brandId }: { brandId: BrandId }) {
       }
     }
     setShowAuth(false);
-    if (data.alreadySpun && !isDevPhone(data.phone)) {
+    if (brandId !== "enala" && data.alreadySpun && !isDevPhone(data.phone)) {
       userRef.current = data;
       readyToSpinRef.current = false;
       savePlaySession(brandId, data);

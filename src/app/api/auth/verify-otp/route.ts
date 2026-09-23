@@ -83,7 +83,9 @@ async function verifyOtp(request: Request) {
   }
 
   const alreadySpun =
-    brand === "sofa" || isDevPhone(phone) ? false : Boolean(affData?.already_spun);
+    brand === "sofa" || brand === "enala" || isDevPhone(phone)
+      ? false
+      : Boolean(affData?.already_spun);
 
   const response = NextResponse.json({
     status: "true",
